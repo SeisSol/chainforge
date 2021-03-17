@@ -1,0 +1,10 @@
+__pycache__
+.idea
+*.egg-info
+*.swo
+*.swp
+build
+cmake-build-debug
+tmp
+.vscode
+.graphs

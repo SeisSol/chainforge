@@ -1,0 +1,44 @@
+iq = {rows: 56,
+      cols: 9,
+      addr: strided,
+      bbox: [0, 0, 56, 9]};
+
+s1 = {rows: 56,
+      cols: 56,
+      addr: none,
+      bbox: [0, 0, 56, 56]};
+
+s2 = {rows: 56,
+      cols: 56,
+      addr: none,
+      bbox: [0, 0, 56, 56]};
+
+s3 = {rows: 56,
+      cols: 56,
+      addr: none,
+      bbox: [0, 0, 56, 56]};
+
+q0 = {rows: 56,
+     cols: 9,
+     addr: strided,
+     bbox: [0, 0, 56, 9]};
+
+j1 = {rows: 9,
+      cols: 9,
+      addr: strided,
+      bbox: [0, 0, 9, 9]};
+
+j2 = {rows: 9,
+      cols: 9,
+      addr: strided,
+      bbox: [0, 0, 9, 9]};
+
+j3 = {rows: 9,
+      cols: 9,
+      addr: strided,
+      bbox: [0, 0, 9, 9]};
+
+
+
+iq = s1 * (q0 * j1) + s2 * (q0 * j2) + s3 * (q0 * j3) -> time;
+#iq = s1 * q0 * j1 + s2 * q0 * j2 -> time;

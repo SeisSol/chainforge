@@ -1,0 +1,107 @@
+int {{ test_name }} () {
+  std::cout << std::string(80, '=') << std::endl;
+  std::cout << "benchmark name: " << "{{ test_name }}" << std::endl;
+
+  const size_t num_elements = {{ config['num_elements'] }};
+
+  // compute matrix sizes, ne - number of elements
+  {%- for mat in cpu_matrices %}
+  size_t {{ mat.name }}_ne = {% if is_batch(mat.attr.addressing) %}num_elements{% else %}1{% endif %};
+  unsigned {{ mat.name }}_size = {{ mat.attr.num_rows * mat.attr.num_cols }};
+  {% endfor %}
+
+
+  // allocate CPU matrices
+  {%- for mat in cpu_matrices %}
+  real *{{ mat.name }} = new real[ {{"{0}_size * {0}_ne".format(mat.name)}}];
+  {%- endfor %}
+
+
+  // init CPU matrices
+  {%- for mat in cpu_matrices %}
+  cf::aux::initMatrix({{"{0}, {0}_size, {0}_ne".format(mat.name)}});
+  {%- endfor %}
+
+
+  // allocate and init GPU matrices
+  {%- for mat in gpu_matrices %}
+  real *dev_{{ mat.name }} = nullptr;
+  {{ api.alloc("dev_{0}".format(mat.name), "{0}_size * sizeof(real) * {0}_ne".format(mat.name) ) }}; CHECK_ERR;
+  {{ api.copy_to("dev_{0}".format(mat.name), mat.name, "{0}_size * sizeof(real) * {0}_ne".format(mat.name)) }}; CHECK_ERR;
+  {% endfor %}
+
+
+  // compute on CPU
+  std::cout << "computing a reference solution on CPU" << std::endl;
+  for (size_t element = 0; element < num_elements; ++element) {
+    {% for descr in gemm_list %}
+    {
+      real *next_a = findData({{ "{0}, {0}_size".format(descr.mat_a.alias) }}, {% if is_batch(descr.mat_a.addressing) %}element{% else %}0{% endif %});
+      real *next_b = findData({{ "{0}, {0}_size".format(descr.mat_b.alias) }}, {% if is_batch(descr.mat_b.addressing) %}element{% else %}0{% endif %});
+      real *next_c = findData({{ "{0}, {0}_size".format(descr.mat_c.alias) }}, {% if is_batch(descr.mat_c.addressing) %}element{% else %}0{% endif %});
+      gemm({{ trans2str(descr.trans_a) }}, {{ trans2str(descr.trans_b) }}, 
+           {{ descr._m }}, {{ descr._n }}, {{ descr._k }},
+           {{ descr.alpha }}, next_a, {{ descr.mat_a.num_rows }},
+           next_b, {{ descr.mat_b.num_rows }},
+           {{ descr.beta }}, next_c, {{ descr.mat_c.num_rows }});
+
+           
+    }
+    {% endfor %}
+  }
+
+  std::cout << "computing a reference solution on GPU" << std::endl;
+  // compute on GPU
+  {{ call_site }}
+
+
+  // compare results
+  real *gpu_res = new real[{{ res_matrix.name }}_size * {{ res_matrix.name }}_ne];
+  {{ api.copy_from( "gpu_res", "dev_{}".format(res_matrix.name), "{0}_size * sizeof(real) * {0}_ne".format(res_matrix.name)) }}; CHECK_ERR;
+
+  std::cout << "comparing..." << std::endl;
+  bool isEqual = cf::aux::compare({{"{0}, gpu_res, {0}_size, {0}_ne, 5e-2".format(res_matrix.name)}});
+  if (isEqual) {
+    std::cout << "PASS" << std::endl;
+  }
+  else {
+    std::cout << "FAILED" << std::endl;
+  }
+
+
+  // compute on GPU
+  std::cout << "running benchmark..." << std::endl;
+  utils::StopWatch<std::chrono::duration<double, std::chrono::nanoseconds::period>> timer;
+  size_t num_repeats = {{ config['num_repeats'] }};
+  timer.start();
+  {
+    for (int repeat = 0; repeat < num_repeats; ++repeat) {
+      {{ call_site }}
+    }
+  }
+
+  {{ api.sync() }}; CHECK_ERR;
+  timer.stop();
+
+
+  size_t flop_counter = {{ flops }};
+  std::cout << "Num elements: " << num_elements << std::endl;
+  std::cout << "Num repeats: " << num_repeats << std::endl;
+  std::cout << "Computed Flops: " << num_repeats * flop_counter * num_elements << std::endl;
+  std::cout << "Spent time: " << timer.getTime() << std::endl;
+  std::cout << "GFLOPS: " << static_cast<double>(num_repeats * flop_counter) / (timer.getTime() / static_cast<double>(num_elements)) << std::endl;
+
+
+  // deallocate GPU matrices
+  {%- for mat in gpu_matrices %}
+  {{ api.dealloc( "dev_{0}".format(mat.name) ) }}; CHECK_ERR;
+  {%- endfor %}
+
+
+  // deallocate CPU matrices
+  {%- for mat in cpu_matrices %}
+  delete {{ mat.name }};
+  {%- endfor %}
+  delete gpu_res;
+  return 0;
+}

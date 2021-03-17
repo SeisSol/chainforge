@@ -1,0 +1,4 @@
+lark-parser
+PyYAML==5.3
+graphviz
+jinja2

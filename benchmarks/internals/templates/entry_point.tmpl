@@ -1,0 +1,52 @@
+#include "aux.h"
+#include "stop_watch.h"
+#include "chainforge_aux.h"
+#include "gemm.h"
+#include "kernel.h"
+#include <iostream>
+#include <string>
+#include <unordered_set>
+
+using real = {{ config['fp_type'] }};
+using namespace cf::reference;
+
+// forward declarations
+{%- for name in benchmarks_names %}
+int {{ name }}();
+{%- endfor %}
+
+void printAllowedOptions(const std::unordered_set<std::string>& allowed) {
+    std::cout << "allowed options: ";
+    for (const auto& option: allowed) {
+        std::cout << option << ", ";
+    }
+    std::cout << std::endl;
+}
+
+int main (int argc, char *argv[]) {
+    std::unordered_set<std::string> options = { {{ list_to_arg_string(benchmarks_names) }} };
+
+    if (argc != 2) {
+        std::cout << "Error: please, provide a name of a benchmark" << std::endl;
+        printAllowedOptions(options);
+        return -1;
+    }
+
+    std::cout << argv[1] << std::endl;
+    {%- for name in benchmarks_names %}
+    if (std::string(argv[1]) == "{{ name }}") {
+        {{ name }}();
+    } else
+    {%- endfor %}
+    {
+        std::cout << "Error: " << argv[1] << " doesn't match any benchmark" << std::endl;
+        printAllowedOptions(options);
+        return -1;
+    }
+
+    return 0;
+}
+
+{% for benchmark in benchmarks_src %}
+{{ benchmark }}
+{% endfor %}

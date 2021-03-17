@@ -1,0 +1,36 @@
+mat_res = {rows: 56,
+           cols: 9,
+           addr: strided,
+           bbox: [0, 0, 56, 9]};
+
+mat_a = {rows: 56,
+         cols: 20,
+         addr: none,
+         bbox: [0, 0, 56, 20]};
+
+mat_b = {rows: 56,
+         cols: 56,
+         addr: strided,
+         bbox: [0, 0, 20, 56]};
+
+mat_c = {rows: 56,
+         cols: 9,
+         addr: strided,
+         bbox: [0, 0, 56, 9]};
+
+mat_d = {rows: 9,
+         cols: 9,
+         addr: strided,
+         bbox: [0, 0, 9, 9]};
+
+mat_e = {rows: 56,
+         cols: 56,
+         addr: none,
+         bbox: [0, 0, 56, 56]};
+
+alpha = 1.0;
+beta = 1.0;
+
+mat_res = mat_e * mat_c * mat_d + mat_res -> test0;
+mat_res = alpha * mat_res + beta * (mat_a * ((mat_b * mat_c) * mat_d)) -> test1;
+#mat_res = alpha * mat_res + beta * (mat_a * (mat_b * (mat_c * mat_d^T))) -> test2;

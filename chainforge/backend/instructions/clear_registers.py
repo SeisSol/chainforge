@@ -1,0 +1,31 @@
+from .abstract_instruction import AbstractInstruction
+from chainforge.common.vm import VM
+from chainforge.common.basic_types import FloatingPointType
+from chainforge.backend.symbol import Symbol, SymbolType
+from chainforge.backend.writer import Writer
+from chainforge.backend.exceptions import InternalError
+
+
+class ClearRegisters(AbstractInstruction):
+  def __init__(self,
+               vm: VM,
+               src: Symbol):
+    super(ClearRegisters, self).__init__(vm)
+
+    if src.stype != SymbolType.Register:
+      raise InternalError('ptr: operand `src` is not in registers')
+
+    self._is_ready = True
+    self._src = src
+    src.add_user(self)
+
+  def gen_code(self, writer: Writer):
+    writer.new_line()
+    writer(f'// clear registers')
+    writer.insert_pragma_unroll()
+    with writer.block(f'for (int i = 0; i < {self._src.obj.size}; ++i)'):
+      fp_prefix = 'f' if self._vm.fp_type == FloatingPointType.FLOAT else ''
+      writer(f'{self._src.name}[i] = 0.0{fp_prefix};')
+
+  def __str__(self) -> str:
+    return f'clear_regs {self._src.name}[{self._src.obj.size}];'
