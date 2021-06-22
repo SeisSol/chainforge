@@ -296,7 +296,7 @@ class Generator:
     params = ', '.join(params)
     total_num_threads_per_block = self._num_threads * self._shr_mem_obj.get_mults_per_block()
     launch_bounds = self._vm.lexic.get_launch_bounds(total_num_threads_per_block)
-    return f'{self._vm.lexic.kernel_type} kernel_{self._base_kernel_name}({params})'
+    return f'{self._vm.lexic.kernel_type} {launch_bounds} kernel_{self._base_kernel_name}({params})'
 
   def _generate_launcher_proto(self, with_defaults=True):
     global_symbols = self._scopes.get_global_scope().values()
