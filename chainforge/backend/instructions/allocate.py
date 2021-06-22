@@ -56,7 +56,8 @@ class ShrMemAlloc(AbstractInstruction):
     common_shrmem = f'total_{shrmem_obj.name}'
     common_shrmem_size = shrmem_obj.get_total_size()
 
-    type_as_str = f'{self._vm.lexic.shr_mem_kw} {self._vm.fp_as_str()}'
+    alignment = 8
+    type_as_str = f'{self._vm.lexic.shr_mem_kw} __align__({alignment}) {self._vm.fp_as_str()}'
     writer(f'{type_as_str} {common_shrmem}[{common_shrmem_size}];')
 
     address = f'{shrmem_obj.get_size_per_mult()} * {self._vm.lexic.threadIdx_y}'

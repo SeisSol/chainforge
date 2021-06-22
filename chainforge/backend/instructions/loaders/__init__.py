@@ -16,7 +16,7 @@ def shm_mem_loader_factory(vm, dest, src, shr_mem, num_threads, load_and_transpo
 
 
   if not isinstance(src.obj, Matrix):
-    raise InternalError('shm-factory: _from operand is not a matrix')
+    raise InternalError('shm-factory: `src` operand is not a matrix')
 
   # Use an extended loader if the tail of a active threads can touch the next column
   # Otherwise, use an exact one

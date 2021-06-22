@@ -36,6 +36,12 @@ def hw_descr_factory(name: str, sub_name: str):
       max_block_per_sm = 16
       max_threads_per_sm = 1024
       max_local_mem_size_per_block = 64 * KB
+    elif sub_name == 'sm_80':
+      max_local_mem_size_per_block = 164 * KB
+    elif sub_name == 'sm_86':
+      max_block_per_sm = 16
+      max_threads_per_sm = 1536
+      max_local_mem_size_per_block = 100 * KB
 
     else:
       raise ValueError(f'Given nvidia SM model is not supported. Provided: {sub_name}')
