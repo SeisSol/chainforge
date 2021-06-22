@@ -60,8 +60,8 @@ class RegistersAllocBuilder(AbstractAllocBuilder):
     name = self._name_new_symbol()
     self._obj = RegMemObject(name, size)
     dest = Symbol(name,
-                     SymbolType.Register,
-                     self._obj)
+                  SymbolType.Register,
+                  self._obj)
 
     self._scopes.add_symbol(dest)
     self._instructions.append(RegisterAlloc(self._vm, dest, size, init_value))
