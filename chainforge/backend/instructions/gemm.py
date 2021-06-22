@@ -72,6 +72,7 @@ class Gemm(AbstractInstruction):
     writer(f'// gemm: {self._op1.name} x {self._op2.name}')
     with writer.block(self.gen_mask_threads(num_active_threads)):
       k_range = view_op1.columns
+      writer.insert_pragma_unroll()
       with writer.block(f'for (int k = 0; k < {k_range}; ++k)'):
 
         address = f'{self._vm.lexic.threadIdx_x} + k * {view_op1.lead_dim}'

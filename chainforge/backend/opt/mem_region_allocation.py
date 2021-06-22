@@ -17,6 +17,9 @@ class Region:
   def __iter__(self):
     return self._items.__iter__()
 
+  def __contains__(self, item):
+    return item in self._items
+
   def print(self) -> None:
     for item in self._items:
       print(item.name)

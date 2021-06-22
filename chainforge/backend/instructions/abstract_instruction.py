@@ -36,3 +36,7 @@ class AbstractShrMemWrite(AbstractInstruction):
   def set_shr_mem_offset(self, offset: int) -> None:
     self._shr_mem_offset = offset
     self._is_ready = True
+
+  @abstractmethod
+  def get_dest(self):
+    pass

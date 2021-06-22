@@ -20,11 +20,13 @@ class ShrMemObject:
     return self._size_per_mult * self._mults_per_block
 
   def get_total_size_as_str(self):
-    total_size = self.get_total_size() if self._size_per_mult else 'not yet defined'
-    return total_size
+    if self._size_per_mult and self._mults_per_block:
+      return self.get_total_size()
+    else:
+      return 'not yet defined'
 
   def __str__(self) -> str:
-    total_size = self.get_total_size() if self._size_per_mult else 'not yet defined'
+    total_size = self.get_total_size_as_str()
     return f'name {self.name}: total size = {total_size}'
 
 

@@ -26,5 +26,5 @@ class Optimizer:
                         live_map=live_map)
     shr_opt.apply()
 
-    sync_threads_opt = SyncThreadsOpt(self._instrs)
+    sync_threads_opt = SyncThreadsOpt(self._instrs, regions)
     sync_threads_opt.remove_redundant_syncs()
