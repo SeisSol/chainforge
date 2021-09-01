@@ -94,7 +94,9 @@ class Gemm(AbstractInstruction):
     with writer.block(self.gen_mask_threads(num_active_threads)):
       address = f'{self._vm.lexic.threadIdx_x}'
       writer(f'{self._vm.fp_as_str()} prefetch = {self._op1.name}[{address}];')
-      k_range = view_op1.columns
+      
+      # TODO: document
+      k_range = min(view_op1.columns, view_op2.rows)
       with writer.block(f'for (int k = 0; k < {k_range - 1}; ++k)'):
 
         writer(f'{self._vm.fp_as_str()} value = prefetch;')
@@ -143,11 +145,15 @@ class Gemm(AbstractInstruction):
     # a different layout in contrast to the one that has already been loaded to the shared memory
     k_range_op2 = view_op2.rows if is_requested_layout else view_op2.columns
 
+
+    # TODO: adjust to k_range = min(view_op1.columns, view_op2.rows)
+    """
     if k_range_op1 != k_range_op2:
       print(view_op1)
       print(view_op2)
       raise GenerationError(f'gemm: mismatch of contraction length '
                             f'k_range_op1( {k_range_op1} ) != k_range_op2( {k_range_op2} )')
+    """
 
     if view_op2.columns > self._dest.obj.size:
       msg = f'{view_op2.columns} > {self._dest.obj.size}'

@@ -17,7 +17,6 @@ class SyncThreadsOpt:
     self._remove_bottom_instrs()
     self._insert_sync_before_use()
     self._insert_sync_after_use()
-    self._print_instr()
 
   def _print_instr(self):
     for index, instr in enumerate(self._instrs):

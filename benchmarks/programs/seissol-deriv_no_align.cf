@@ -1,0 +1,12 @@
+Am = {rows: 64, cols: 9, addr: strided, bbox: [1, 0, 54, 9]};
+Bm = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+Cm = {rows: 48, cols: 53, addr: none, bbox: [0, 0, 35, 53]};
+Dm = {rows: 48, cols: 9, addr: strided, bbox: [0, 0, 35, 9]};
+Em = {rows: 64, cols: 9, addr: strided, bbox: [1, 0, 55, 9]};
+Fm = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+Gm = {rows: 48, cols: 54, addr: none, bbox: [0, 0, 35, 54]};
+Hm = {rows: 64, cols: 9, addr: strided, bbox: [1, 0, 56, 9]};
+Im = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+Jm = {rows: 48, cols: 55, addr: none, bbox: [0, 0, 35, 55]};
+
+Dm = Dm + (Cm * (Am * Bm)) + (Gm * (Em * Fm)) + (Jm * (Hm * Im)) -> kernel;

@@ -189,7 +189,7 @@ class Generator:
     for gemm in gemm_list:
       local_list = [gemm.mat_a, gemm.mat_b, gemm.mat_c]
 
-      # NOTE: to be on the sage side we init all matrix names with None
+      # NOTE: to be on the safe side we init all matrix names with None
       for matrix in local_list:
         matrix.name = None
 
@@ -245,9 +245,8 @@ class Generator:
   def _write_kernel_meta_data(self, writer):
     writer('// meta data:')
     glb_matrices = self._scopes.get_global_scope().values()
-    delimiter = '; '
     for matrix in glb_matrices:
-      writer(f'// {matrix.obj.gen_descr(delimiter)}')
+      writer(f'// {matrix.obj.gen_descr()}')
 
     writer.new_line()
     for item in self.gemm_list:
