@@ -2,9 +2,12 @@ import setuptools
 
 long_description='experimental version'
 
+with open("chainforge/VERSION", "r") as version_file:
+  current_version = version_file.read().strip()
+
 setuptools.setup(
     name="chainforge",
-    version="0.0.01",
+    version=current_version,
     license="MIT",
     author="Ravil Dorozhinskii",
     author_email="ravil.aviva.com@gmail.com",

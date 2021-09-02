@@ -1,5 +1,5 @@
 from .abstract_instruction import AbstractInstruction
-from chainforge.common.vm import VM
+from chainforge.common import Context
 from chainforge.common.matrix import Matrix
 from chainforge.backend.symbol import Symbol, SymbolType
 from chainforge.backend.exceptions import InternalError, GenerationError
@@ -8,18 +8,20 @@ from chainforge.backend.writer import Writer
 
 class Gemm(AbstractInstruction):
   def __init__(self,
-               vm: VM,
+               context: Context,
                trans_a: bool,
                trans_b: bool,
                op1: Symbol,
                op2: Symbol,
                dest: Symbol):
-    super(Gemm, self).__init__(vm)
+    
+    super(Gemm, self).__init__(context)
     self._trans_a = trans_a
     self._trans_b = trans_b
     self._op1 = op1
     self._op2 = op2
     self._is_ready = True
+    self._user_options = context.get_user_options()
 
     self.registers = None
     if dest.stype != SymbolType.Register:
@@ -41,8 +43,7 @@ class Gemm(AbstractInstruction):
     self._check()
     writer.new_line()
 
-    try_prefetch = False
-    if try_prefetch:
+    if self._user_options.prefetch_gemm:
       if self._op1.stype == SymbolType.Global:
         self.gen_code_with_prefetch(writer,
                                     self._op1.data_view,
@@ -76,7 +77,7 @@ class Gemm(AbstractInstruction):
       with writer.block(f'for (int k = 0; k < {k_range}; ++k)'):
 
         address = f'{self._vm.lexic.threadIdx_x} + k * {view_op1.lead_dim}'
-        writer(f'{self._vm.fp_as_str()} value = {self._op1.name}[{address}];')
+        writer(f'{self._fp_as_str} value = {self._op1.name}[{address}];')
 
         is_requested_layout = view_op2.is_transposed == self._trans_b
         n_range = view_op2.columns if is_requested_layout else view_op2.rows
@@ -93,13 +94,16 @@ class Gemm(AbstractInstruction):
     writer(f'// gemm: {self._op1.name} x {self._op2.name}')
     with writer.block(self.gen_mask_threads(num_active_threads)):
       address = f'{self._vm.lexic.threadIdx_x}'
-      writer(f'{self._vm.fp_as_str()} prefetch = {self._op1.name}[{address}];')
+      writer(f'{self._fp_as_str} prefetch = {self._op1.name}[{address}];')
+
+      if self._user_options.exact_contraction_length:
+        k_range = view_op1.columns
+      else:
+        k_range = min(view_op1.columns, view_op2.rows)
       
-      # TODO: document
-      k_range = min(view_op1.columns, view_op2.rows)
       with writer.block(f'for (int k = 0; k < {k_range - 1}; ++k)'):
 
-        writer(f'{self._vm.fp_as_str()} value = prefetch;')
+        writer(f'{self._fp_as_str} value = prefetch;')
         address = f'{self._vm.lexic.threadIdx_x} + (k + 1) * {view_op1.lead_dim}'
         writer(f'prefetch = {self._op1.name}[{address}];')
 
@@ -145,15 +149,12 @@ class Gemm(AbstractInstruction):
     # a different layout in contrast to the one that has already been loaded to the shared memory
     k_range_op2 = view_op2.rows if is_requested_layout else view_op2.columns
 
-
-    # TODO: adjust to k_range = min(view_op1.columns, view_op2.rows)
-    """
-    if k_range_op1 != k_range_op2:
-      print(view_op1)
-      print(view_op2)
-      raise GenerationError(f'gemm: mismatch of contraction length '
-                            f'k_range_op1( {k_range_op1} ) != k_range_op2( {k_range_op2} )')
-    """
+    if self._user_options.exact_contraction_length:
+      if k_range_op1 != k_range_op2:
+        print(view_op1)
+        print(view_op2)
+        raise GenerationError(f'gemm: mismatch of contraction length '
+                              f'k_range_op1( {k_range_op1} ) != k_range_op2( {k_range_op2} )')
 
     if view_op2.columns > self._dest.obj.size:
       msg = f'{view_op2.columns} > {self._dest.obj.size}'

@@ -16,6 +16,7 @@ class AbstractArchLexic(ABC):
     self.dim3_type = None
     self.sync_block_threads = None
     self.sync_warp_threads = None
+    self.restrict_kw = None
 
   def get_tid_counter(self, thread_id, block_dim, block_id):
     return f'({thread_id} + {block_dim} * {block_id}'
@@ -44,6 +45,7 @@ class AmdArchLexic(AbstractArchLexic):
     self.dim3_type = 'dim3'
     self.sync_block_threads = '__syncthreads()'
     self.sync_warp_threads = '__syncthreads()'
+    self.restrict_kw = '__restrict__'
 
   def get_launch_code(self, func_name, grid, block, stream, func_params):
     return f'hipLaunchKernelGGL({func_name},{grid},{block},0,{stream},{func_params})'
@@ -67,6 +69,7 @@ class NvidiaArchLexic(AbstractArchLexic):
     self.dim3_type = 'dim3'
     self.sync_block_threads = '__syncthreads()'
     self.sync_warp_threads = '__syncwarp()'
+    self.restrict_kw = '__restrict__'
 
   def get_launch_code(self, func_name, grid, block, stream, func_params):
     return f'{func_name}<<<{grid},{block},0,{stream}>>>({func_params})'

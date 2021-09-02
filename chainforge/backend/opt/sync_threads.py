@@ -1,26 +1,25 @@
-from chainforge.backend.instructions import AbstractInstruction
-from chainforge.backend.instructions import SyncThreads, ClearRegisters
-from chainforge.backend.instructions import StoreRegToGlb
-from chainforge.backend.instructions import Gemm, StoreRegToShr, SyncThreads, AbstractShrMemWrite
+from .abstract import AbstractTransformer, Context, AbstractInstruction
+from chainforge.backend.instructions import Gemm, SyncThreads, AbstractShrMemWrite
 from chainforge.backend.symbol import SymbolType
 from .mem_region_allocation import Region
 from typing import List
 
 
-class SyncThreadsOpt:
-  def __init__(self, instructions: List[AbstractInstruction], regions: List[Region]):
-    self._instrs = instructions
-    self._regions = regions
-    self._vm = self._instrs[0]._vm
+class SyncThreadsOpt(AbstractTransformer):
+  def __init__(self,
+               context: Context,
+               instructions: List[AbstractInstruction],
+               regions: List[Region],
+               num_threads: int):
 
-  def remove_redundant_syncs(self):
-    self._remove_bottom_instrs()
+    super(SyncThreadsOpt, self).__init__(context, instructions)
+    self._regions = regions
+    self._num_threads = num_threads
+
+  def apply(self) -> None:
+    self._remove_previous_sync_instructions()
     self._insert_sync_before_use()
     self._insert_sync_after_use()
-
-  def _print_instr(self):
-    for index, instr in enumerate(self._instrs):
-      print(f'{index}:   {instr}')
 
   def _insert_sync_before_use(self):
     selected = []
@@ -59,19 +58,12 @@ class SyncThreadsOpt:
   def _insert_sync_instrs(self, selected):
     for instr in selected:
       index = self._instrs.index(instr)
-      self._instrs.insert(index, SyncThreads(self._vm, 64))
+      self._instrs.insert(index, SyncThreads(self._context, self._num_threads))
 
   def _get_region_id(self, symbol):
     for region_id, region in enumerate(self._regions):
       if symbol in region:
         return region_id
 
-  def _remove_bottom_instrs(self):
-    num_remove_instrs = 0
-    for reversed_index, instr in enumerate(reversed(self._instrs)):
-      num_remove_instrs += 1
-      if isinstance(instr, StoreRegToGlb):
-        break
-
-    for index in range(num_remove_instrs - 1):
-      self._instrs.pop(-1)
+  def _remove_previous_sync_instructions(self):
+    self._instrs = [item for item in self._instrs if not isinstance(item, SyncThreads)]

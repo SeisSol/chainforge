@@ -1,5 +1,5 @@
 from .allocator_builder import AbstractBuilder
-from chainforge.common.vm import VM
+from chainforge.common import Context, VM
 from chainforge.backend.scopes import Scopes
 from chainforge.backend.symbol import  Symbol, SymbolType
 from chainforge.backend.instructions import Gemm
@@ -16,12 +16,12 @@ from typing import Tuple, Dict
 
 class GemmBuilder(AbstractBuilder):
   def __init__(self,
-               vm: VM,
+               context: Context,
                scopes: Scopes,
                register_array: Symbol,
                shr_mem: Symbol,
                num_threads: int):
-    super(GemmBuilder, self).__init__(vm, scopes)
+    super(GemmBuilder, self).__init__(context, scopes)
     self._dest_regs = register_array
     self._shr_mem = shr_mem
     self._num_threads = num_threads
@@ -50,9 +50,12 @@ class GemmBuilder(AbstractBuilder):
 
     self._make_load_op1()
     self._make_load_op2()
+    self._insert_sync_threads()
     self._check_register_array()
     self._make_gemm()
+    self._insert_sync_threads()
     self._make_store()
+    self._insert_sync_threads()
     self._clear_registers()
 
   def _make_load_op1(self):
@@ -61,7 +64,6 @@ class GemmBuilder(AbstractBuilder):
         self._mem_region_a, load_op1 = self._make_loader_and_symbol(self._op1, is_transpose=True)
         self._loaders_cache[self._mem_region_a] = load_op1
         self._instructions.append(load_op1)
-        self._instructions.append(SyncThreads(self._vm, self._num_threads))
       else:
         # Note: operand will reside in glb. mem for gemm operation
         self._mem_region_a = self._op1
@@ -112,7 +114,7 @@ class GemmBuilder(AbstractBuilder):
                             obj=operand.obj)
 
     self._scopes.add_symbol(shr_mem_region)
-    load_op = shm_mem_loader_factory(self._vm,
+    load_op = shm_mem_loader_factory(self._context,
                                      dest=shr_mem_region,
                                      src=operand,
                                      shr_mem=self._shr_mem,
@@ -125,7 +127,7 @@ class GemmBuilder(AbstractBuilder):
       raise InternalError('gemm-builder: reg_array must be in registers')
 
   def _make_gemm(self):
-    self._instructions.append(Gemm(vm=self._vm,
+    self._instructions.append(Gemm(context=self._context,
                                    trans_a=self._descr.trans_a,
                                    trans_b=self._descr.trans_b,
                                    op1=self._mem_region_a,
@@ -136,13 +138,13 @@ class GemmBuilder(AbstractBuilder):
     if self._dest_obj in self._scopes:
       dest_symbol = self._scopes.get_symbol(self._dest_obj)
       if dest_symbol.stype == SymbolType.SharedMem:
-        self._instructions.append(StoreRegToShr(vm=self._vm,
+        self._instructions.append(StoreRegToShr(context=self._context,
                                                 src=self._dest_regs,
                                                 dest=dest_symbol,
                                                 shr_mem=self._shr_mem,
                                                 num_threads=self._num_threads))
       elif dest_symbol.stype == SymbolType.Global:
-        self._instructions.append(StoreRegToGlb(vm=self._vm,
+        self._instructions.append(StoreRegToGlb(context=self._context,
                                                 src=self._dest_regs,
                                                 dest=dest_symbol,
                                                 alpha=self._descr.alpha,
@@ -158,14 +160,18 @@ class GemmBuilder(AbstractBuilder):
                            stype=SymbolType.SharedMem,
                            obj=self._dest_obj)
       self._scopes.add_symbol(dest_symbol)
-      self._instructions.append(StoreRegToShr(vm=self._vm,
+      self._instructions.append(StoreRegToShr(context=self._context,
                                               src=self._dest_regs,
                                               dest=dest_symbol,
                                               shr_mem=self._shr_mem,
                                               num_threads=self._num_threads))
 
   def _clear_registers(self):
-    self._instructions.append(ClearRegisters(vm=self._vm, src=self._dest_regs))
+    self._instructions.append(ClearRegisters(context=self._context, src=self._dest_regs))
+
+  def _insert_sync_threads(self):
+    self._instructions.append(SyncThreads(context=self._context,
+                                          num_threads_per_mult=self._num_threads))
 
   def _name_shr_reg(self):
     name = f'_{self._counter}'

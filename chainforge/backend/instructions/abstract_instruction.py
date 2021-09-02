@@ -1,12 +1,17 @@
-from chainforge.common.vm import VM
+from chainforge.common import Context, VM
 from chainforge.backend.writer import Writer
 from abc import ABC, abstractmethod
 from typing import Union
 
 
 class AbstractInstruction(ABC):
-  def __init__(self, vm: VM):
-    self._vm: VM = vm
+  def __init__(self, context: Context):
+    if not isinstance(context, Context):
+      raise RuntimeError(f'received wrong type, expected Context, given {type(context)}')
+    
+    self._context = context
+    self._vm: VM = context.get_vm()
+    self._fp_as_str = context.fp_as_str()
     self._is_ready = False
 
   @abstractmethod
@@ -25,13 +30,19 @@ class AbstractInstruction(ABC):
 
 
 class AbstractShrMemWrite(AbstractInstruction):
-  def __init__(self, vm: VM):
-    super().__init__(vm)
+  def __init__(self, context: Context):
+    super().__init__(context)
     self._shm_volume: int = 0
     self._shr_mem_offset: Union[int, None] = 0
 
   def compute_shared_mem_size(self) -> int:
-    return self._shm_volume
+    user_options = self._context.get_user_options()
+
+    if user_options.align_shr_mem:
+      size = self._context.align(self._shm_volume)
+    else:
+      size = self._shm_volume
+    return size
 
   def set_shr_mem_offset(self, offset: int) -> None:
     self._shr_mem_offset = offset

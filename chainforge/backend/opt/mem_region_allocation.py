@@ -1,3 +1,4 @@
+from .abstract import AbstractOptStage, Context
 from .coloring import Vertex
 from .coloring import GraphColoring
 from collections import OrderedDict
@@ -25,21 +26,24 @@ class Region:
       print(item.name)
 
 
-class MemoryRegionAllocation:
-  def __init__(self, live_map):
+class MemoryRegionAllocation(AbstractOptStage):
+  def __init__(self, context: Context, live_map):
+    super(MemoryRegionAllocation, self).__init__(context)
+    
     self._live_map: Dict[int, Set[Symbol]] = live_map
     self._vertex_counter: int = 0
     self._adj_list: List[Vertex] = []
     self._objects2vertices_map: Union[Dict[Symbol, Vertex], None] = None
+    self._regions: Union[List[Region], None] = None
 
-  def allocate_regions(self) -> List[Region]:
+  def apply(self) -> None:
     num_regions = MemoryRegionAllocation.compute_num_regions(self._live_map)
     variable_set = self._get_variable_set()
     self._adj_list, self._objects2vertices_map = self._generate_vertices(variable_set)
     self._assign_neighbours()
 
-    regions: List[Region] = [Region() for i in range(num_regions)]
-    gc = GraphColoring(graph=copy(self._adj_list), user_objects=regions)
+    self._regions: List[Region] = [Region() for i in range(num_regions)]
+    gc = GraphColoring(graph=copy(self._adj_list), user_objects=self._regions)
     coloring_map: Dict[Vertex, object] = gc.apply()
 
     vertices2obkects = {vertex: name for name, vertex in self._objects2vertices_map.items()}
@@ -47,7 +51,8 @@ class MemoryRegionAllocation:
       mem_region = coloring_map[vertex]
       mem_region.add_item(vertices2obkects[vertex])
 
-    return regions
+  def get_regions(self) -> List[Region]:
+    return self._regions
 
   def _get_variable_set(self) -> Dict[Symbol, None]:
     ordered_variable_set = OrderedDict()

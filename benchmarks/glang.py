@@ -1,7 +1,7 @@
 from chainforge.frontend import Parser, PostProcessor
 from chainforge.common import FloatingPointType
 from chainforge.backend.generator import Generator
-from chainforge.common import VM, vm_factory
+from chainforge.common import Context
 from internals import BenchGenerator, EnryPointGenerator, Aux
 from os import path, makedirs
 import sys
@@ -61,14 +61,14 @@ def main():
 
   stream = open(args.config, 'r')
   config = yaml.safe_load(stream)
-  vm = vm_factory(name=args.arch,
-                  sub_name=args.sub_arch,
-                  fp_type=FloatingPointType.str2enum(config['fp_type']))
+  context = Context(name=args.arch,
+                    sub_name=args.sub_arch,
+                    fp_type=FloatingPointType.str2enum(config['fp_type']))
 
   kernels = []; launchers = []; headers = []
   benchmarks_src = []; benchmarks_names = []
   for bench_name, gemm_list in gemm_dicts.items():
-    gpu_generator = Generator(gemm_list, vm)
+    gpu_generator = Generator(gemm_list, context)
     gpu_generator.set_kernel_name(bench_name)
     gpu_generator.generate()
 

@@ -1,6 +1,7 @@
 class HwDecription:
   def __init__(self,
                vec_unit_length,
+               hw_fp_word_size,
                max_local_mem_size_per_block,
                max_threads_per_block,
                max_reg_per_block,
@@ -8,6 +9,7 @@ class HwDecription:
                max_block_per_sm,
                name):
     self.vec_unit_length = vec_unit_length
+    self.hw_fp_word_size = hw_fp_word_size
     self.max_local_mem_size_per_block = max_local_mem_size_per_block
     self.max_threads_per_block = max_threads_per_block
     self.max_reg_per_block = max_reg_per_block
@@ -19,9 +21,9 @@ class HwDecription:
 def hw_descr_factory(name: str, sub_name: str):
   KB = 1024
   if name == "nvidia":
-
     # from: https://en.wikipedia.org/wiki/CUDA
     nvidia_warp = 32
+    hw_fp_word_size = 4
     max_reg_per_block = 64 * KB
     max_threads_per_block = 1024
     max_threads_per_sm = 2048
@@ -47,6 +49,7 @@ def hw_descr_factory(name: str, sub_name: str):
       raise ValueError(f'Given nvidia SM model is not supported. Provided: {sub_name}')
 
     return HwDecription(nvidia_warp,
+                        hw_fp_word_size,
                         max_local_mem_size_per_block,
                         max_threads_per_block,
                         max_reg_per_block,
@@ -56,6 +59,7 @@ def hw_descr_factory(name: str, sub_name: str):
 
   elif name == "amd":
     amd_wavefront = 64
+    hw_fp_word_size = 4
     max_reg_per_workgroup = 256 * KB
     max_threads_per_block = 1024
     if sub_name in ['gfx906']:
@@ -66,6 +70,7 @@ def hw_descr_factory(name: str, sub_name: str):
       raise ValueError(f'Given amd CU model is not supported. Provided: {sub_name}')
 
     return HwDecription(amd_wavefront,
+                        hw_fp_word_size,
                         max_local_mem_size_per_workgroup,
                         max_threads_per_block,
                         max_reg_per_workgroup,
