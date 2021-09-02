@@ -8,8 +8,8 @@ class Matrix():
                num_rows: int,
                num_cols: int,
                addressing: Addressing,
-               bbox: Union[List[int], None] = None,
-               alias: Union[str, None] = None,
+               bbox: Union[List[int], None]=None,
+               alias: Union[str, None]=None,
                is_tmp: bool = False):
 
     self.name = None
@@ -38,7 +38,6 @@ class Matrix():
 
     else:
       self.bbox = (0, 0, num_rows - 1, num_cols - 1)
-
 
     if isinstance(addressing, Addressing):
       self.addressing = addressing
@@ -80,16 +79,15 @@ class Matrix():
   def __str__(self):
     return self.name
 
-  def gen_descr(self, delimiter='\n'):
-    string = f'name = {self.name}{delimiter}'
-    string += f'num. rows = {self.get_actual_num_rows()}{delimiter}'
-    string += f'num. cols = {self.get_actual_num_cols()}{delimiter}'
-    string += f'addrs = {self.addressing}{delimiter}'
-    string += f'bbox = {self.bbox}{delimiter}'
-    string += f'dim1 = {self.num_rows}{delimiter}'
-    string += f'dim2 = {self.num_cols}{delimiter}'
-
+  def gen_descr(self):
+    string = f'{self.name} = {{'
+    string += f'rows: {self.num_rows}, '
+    string += f'cols: {self.num_cols}, '
+    string += f'addr: {Addressing.addr2str(self.addressing)}, '
+    string += f'bbox: {self.bbox}'
+    string += f'}};'
     return string
+
 
 class DenseMatrix(Matrix):
   def __init__(self,

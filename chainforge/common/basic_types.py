@@ -23,7 +23,7 @@ class Addressing(enum.Enum):
     map = {'none': Addressing.NONE,
            'strided': Addressing.STRIDED,
            'pointer_based': Addressing.PTR_BASED}
-    if not string in map:
+    if string not in map:
       raise ValueError(f'arg must be either none, strided or pointer_based, given: {string}')
     return map[string]
 

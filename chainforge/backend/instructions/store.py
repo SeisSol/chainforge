@@ -1,21 +1,21 @@
-from .abstract_instruction import AbstractInstruction, AbstractShrMemWrite
-from chainforge.common.vm import VM
+from typing import Union
+from chainforge.common import Context
 from chainforge.common.matrix import Matrix
 from chainforge.backend.data_types import RegMemObject
 from chainforge.backend.symbol import Symbol, SymbolType, DataView
 from chainforge.backend.exceptions import InternalError
 from chainforge.backend.writer import Writer
-from typing import Union
+from .abstract_instruction import AbstractInstruction, AbstractShrMemWrite
 
 
 class StoreRegToShr(AbstractShrMemWrite):
   def __init__(self,
-               vm: VM,
+               context: Context,
                src: Symbol,
                dest: Symbol,
                shr_mem: Symbol,
                num_threads: int):
-    super(StoreRegToShr, self).__init__(vm)
+    super(StoreRegToShr, self).__init__(context)
 
     if src.stype != SymbolType.Register:
       raise InternalError('store: operand `src` is not in registers')
@@ -49,8 +49,7 @@ class StoreRegToShr(AbstractShrMemWrite):
   def gen_code(self, writer: Writer) -> None:
     writer.new_line()
     writer(f' // writing to shr mem: from {self._src.name} to {self._dest.name}')
-    #writer(f'{self._vm.lexic.sync_block_threads};')
-    lhs = f'{self._vm.fp_as_str()}* {self._dest.name}'
+    lhs = f'{self._fp_as_str}* {self._vm.lexic.restrict_kw} {self._dest.name}'
     rhs = f'&{self._shr_mem.name}[{self._shr_mem_offset}]'
     writer(f'{lhs} = {rhs};')
 
@@ -60,7 +59,7 @@ class StoreRegToShr(AbstractShrMemWrite):
       loop = f'for (int i = 0; i < {view.columns}; ++i)'
       with writer.block(loop):
         rhs = f'{self._src.name}[i]'
-        lhs = f'{self._dest.name}[{self._vm.lexic.threadIdx_x} + {view.lead_dim} * i]'
+        lhs = f'{self._dest.name}[{self._vm.lexic.thread_idx_x} + {view.lead_dim} * i]'
         writer(f'{lhs} = {rhs};')
 
   def get_dest(self) -> Symbol:
@@ -72,13 +71,13 @@ class StoreRegToShr(AbstractShrMemWrite):
 
 class StoreRegToGlb(AbstractInstruction):
   def __init__(self,
-               vm: VM,
+               context: Context,
                src: Symbol,
                dest: Symbol,
                alpha: float,
                beta: float,
                num_threads: int):
-    super(StoreRegToGlb, self).__init__(vm)
+    super(StoreRegToGlb, self).__init__(context)
 
     if src.stype != SymbolType.Register:
       raise InternalError('store: operand `src` is not in reg mem')
@@ -117,7 +116,7 @@ class StoreRegToGlb(AbstractInstruction):
       writer.insert_pragma_unroll()
       loop = f'for(int n = 0; n < {dest_view.columns}; ++n)'
       with writer.block(loop):
-        lhs = f'{self._dest.name}[{self._vm.lexic.threadIdx_x} + {dest_view.lead_dim} * n]'
+        lhs = f'{self._dest.name}[{self._vm.lexic.thread_idx_x} + {dest_view.lead_dim} * n]'
 
         rhs = f'{self._alpha} * {self._src.name}[n]'
 

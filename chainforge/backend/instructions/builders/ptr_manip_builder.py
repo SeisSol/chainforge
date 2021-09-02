@@ -1,15 +1,15 @@
-from .abstract_builder import AbstractBuilder
-from chainforge.common.vm import VM
+from chainforge.common import Context, VM
 from chainforge.backend.scopes import Scopes, Symbol
 from chainforge.common.matrix import Matrix
 from chainforge.backend.symbol import SymbolType
 from chainforge.backend.instructions import GetElementPtr
 from chainforge.backend.exceptions import InternalError
+from .abstract_builder import AbstractBuilder
 
 
 class GetElementPtrBuilder(AbstractBuilder):
-  def __init__(self, vm: VM, scopes: Scopes):
-    super(GetElementPtrBuilder, self).__init__(vm, scopes)
+  def __init__(self, context: Context, scopes: Scopes):
+    super(GetElementPtrBuilder, self).__init__(context, scopes)
 
   def build(self, src: Symbol):
     self._reset()
@@ -24,5 +24,5 @@ class GetElementPtrBuilder(AbstractBuilder):
                   obj=src.obj)
 
     self._scopes.add_symbol(dest)
-    self._instructions.append(GetElementPtr(self._vm, src, dest))
+    self._instructions.append(GetElementPtr(self._context, src, dest))
     src.add_user(self)

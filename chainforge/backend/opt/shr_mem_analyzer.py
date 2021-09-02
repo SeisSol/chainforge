@@ -1,21 +1,26 @@
-from .mem_region_allocation import Region
+from typing import List, Dict, Union, Tuple, Set
 from chainforge.backend.instructions import StoreRegToShr
 from chainforge.backend.instructions.loaders import AbstractShrMemLoader
 from chainforge.backend.symbol import Symbol
 from chainforge.backend.data_types import ShrMemObject
 from chainforge.backend.exceptions import GenerationError
-from typing import List, Dict, Union, Tuple, Set
+from .abstract import AbstractOptStage, Context
+from .mem_region_allocation import Region
 
 
-class ShrMemOpt:
-  def __init__(self, shr_mem_obj: ShrMemObject,
+class ShrMemOpt(AbstractOptStage):
+  def __init__(self,
+               context: Context,
+               shr_mem_obj: ShrMemObject,
                regions: List[Region],
                live_map: Dict[int, Set[Symbol]]):
+    super(ShrMemOpt, self).__init__(context)
+
     self._shr_mem_obj: ShrMemObject = shr_mem_obj
     self._regions: List[Region] = regions
     self._live_map: Dict[int, Set[Symbol]] = live_map
 
-  def apply(self):
+  def apply(self) -> None:
     self._check_regions()
 
     max_memory, mem_per_region = self._compute_total_shr_mem_size()

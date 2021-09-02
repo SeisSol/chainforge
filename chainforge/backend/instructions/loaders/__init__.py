@@ -1,19 +1,18 @@
+from math import ceil
+from chainforge.common.matrix import Matrix
+from chainforge.backend.exceptions import InternalError
 from .shr_mem_loader import ExtendedPatchLoader, ExactPatchLoader
 from .shr_trans_mem_loader import ExtendedTransposePatchLoader, ExactTransposePatchLoader
 from .abstract_loader import ShrMemLoaderType, AbstractShrMemLoader
-from chainforge.common.matrix import Matrix
-from chainforge.backend.exceptions import InternalError
-from math import ceil
 
 
-def shm_mem_loader_factory(vm, dest, src, shr_mem, num_threads, load_and_transpose=False):
-  params = {'vm': vm,
+def shm_mem_loader_factory(context, dest, src, shr_mem, num_threads, load_and_transpose=False):
+  params = {'context': context,
             'dest': dest,
             'src': src,
             'shr_mem': shr_mem,
             'num_threads': num_threads,
             'load_and_transpose': load_and_transpose}
-
 
   if not isinstance(src.obj, Matrix):
     raise InternalError('shm-factory: `src` operand is not a matrix')

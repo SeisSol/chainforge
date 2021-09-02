@@ -1,9 +1,12 @@
-from .data_types import ShrMemObject, RegMemObject
+from typing import List, Union, Type
+from copy import deepcopy
+import hashlib
 from chainforge.common import GemmDescr
-from chainforge.common import VM
+from chainforge.common import Context
 from chainforge.common import Addressing, GeneralLexicon
 from chainforge.common.aux import get_extra_offset_name
-from .opt import Optimizer
+from .data_types import ShrMemObject, RegMemObject
+from .opt import OptimizationStage
 from .scopes import Scopes
 from .symbol import Symbol, SymbolType
 from .instructions import AbstractInstruction
@@ -12,10 +15,6 @@ from .instructions import ShrMemAllocBuilder, RegistersAllocBuilder
 from .writer import Writer
 from .thread_block_policies import AbstractThreadBlockPolicy, SimpleThreadBlockPolicy
 from .exceptions import GenerationError
-from typing import List, Union
-from copy import deepcopy
-import hashlib
-from typing import Type
 
 
 class Generator:
@@ -23,10 +22,10 @@ class Generator:
 
   def __init__(self,
                gemm_list: List[GemmDescr],
-               vm: VM,
+               context: Context,
                thread_block_policy_type: Type[AbstractThreadBlockPolicy] = SimpleThreadBlockPolicy):
     self.gemm_list: List[GemmDescr] = gemm_list
-    self._vm: VM = vm
+    self._context: Context = context
     self._thread_block_policy_type: Type[AbstractThreadBlockPolicy] = thread_block_policy_type
     self._base_kernel_name: Union[str, None] = None
 
@@ -48,6 +47,7 @@ class Generator:
 
     self._ir: List[AbstractInstruction] = []
 
+    self._check_consistency_with_user_options()
     self._name_operands(self.gemm_list)
 
   def set_kernel_name(self, name):
@@ -67,8 +67,12 @@ class Generator:
     self._deduce_num_threads()
     self._deduce_accumulator_size()
     self._emit_ir()
-    opt = Optimizer(shr_mem=self._shr_mem_obj, instructions=self._ir)
+    opt = OptimizationStage(context=self._context,
+                            shr_mem=self._shr_mem_obj,
+                            instructions=self._ir,
+                            num_threads=self._num_threads)
     opt.optimize()
+    self._ir = opt.get_instructions()
     self._deduce_mults_per_block()
 
     self._generate_kernel()
@@ -94,23 +98,24 @@ class Generator:
     writer = Writer()
     proto = self._generate_launcher_proto(with_defaults=False)
     mults_per_block = self._shr_mem_obj.get_mults_per_block()
+    lexic = self._context.get_vm().lexic
     with writer.block(f'{proto}'):
-      writer(f'{self._vm.lexic.dim3_type} block({self._num_threads}, {mults_per_block}, 1);')
+      writer(f'{lexic.dim3_type} block({self._num_threads}, {mults_per_block}, 1);')
       num_blocks = f'({GeneralLexicon.NUM_ELEMENTS} + {mults_per_block} - 1) / {mults_per_block}'
-      writer(f'{self._vm.lexic.dim3_type} grid({num_blocks}, 1, 1);')
+      writer(f'{lexic.dim3_type} grid({num_blocks}, 1, 1);')
 
       if_stream_exists = f'({GeneralLexicon.STREAM_PTR_STR} != nullptr)'
       stream_obj = f'static_cast<cudaStream_t>({GeneralLexicon.STREAM_PTR_STR})'
-      writer(f'{self._vm.lexic.stream_name} stream = {if_stream_exists} ? {stream_obj} : 0;')
+      writer(f'{lexic.stream_name} stream = {if_stream_exists} ? {stream_obj} : 0;')
 
       args = self._generate_kernel_base_args()
       args = ', '.join(args)
       kernel_name = f'kernel_{self._base_kernel_name}'
-      call_site = self._vm.lexic.get_launch_code(func_name=kernel_name,
-                                                 grid='grid',
-                                                 block='block',
-                                                 stream='stream',
-                                                 func_params=args)
+      call_site = lexic.get_launch_code(func_name=kernel_name,
+                                        grid='grid',
+                                        block='block',
+                                        stream='stream',
+                                        func_params=args)
       writer(f'{call_site};')
       writer('CHECK_ERR;')
     self._launcher = writer.get_src()
@@ -120,7 +125,8 @@ class Generator:
 
   def _deduce_num_threads(self):
     for gemm in self.gemm_list:
-      num_threads, num_active_threads = gemm.get_num_threads(self._vm)
+      num_threads, num_active_threads = gemm.get_num_threads(self._context)
+
       self._num_threads = max(num_threads, self._num_threads)
       self._num_active_threads = max(num_active_threads, self._num_active_threads)
 
@@ -131,27 +137,27 @@ class Generator:
 
   def _emit_ir(self):
     # find local data from batches
-    builder = GetElementPtrBuilder(self._vm, self._scopes)
+    builder = GetElementPtrBuilder(self._context, self._scopes)
     self._scopes.add_scope()
     for symbol in self._scopes.get_global_scope().values():
       builder.build(symbol)
       self._ir.extend(builder.get_instructions())
 
     # allocate registers
-    builder = RegistersAllocBuilder(self._vm, self._scopes)
+    builder = RegistersAllocBuilder(self._context, self._scopes)
     builder.build(self._accumulator_size, 0.0)
     self._register_array_obj = builder.get_resultant_obj()
     self._ir.extend(builder.get_instructions())
 
     # allocate shared memory
-    builder = ShrMemAllocBuilder(self._vm, self._scopes)
+    builder = ShrMemAllocBuilder(self._context, self._scopes)
     builder.build(size=None)
     self._shr_mem_obj = builder.get_resultant_obj()
     self._ir.extend(builder.get_instructions())
 
     self._scopes.add_scope()
     # generate GEMM and store operations
-    builder = GemmBuilder(self._vm,
+    builder = GemmBuilder(self._context,
                           self._scopes,
                           self._scopes.get_symbol(self._register_array_obj),
                           self._scopes.get_symbol(self._shr_mem_obj),
@@ -165,7 +171,7 @@ class Generator:
       self._ir.extend(builder.get_instructions())
 
   def _deduce_mults_per_block(self):
-    policy = self._thread_block_policy_type(self._vm,
+    policy = self._thread_block_policy_type(self._context,
                                             self._shr_mem_obj.get_size_per_mult(),
                                             self._num_threads)
     num_mults_per_block = policy.get_num_mults_per_block()
@@ -175,10 +181,19 @@ class Generator:
     return self._kernel
 
   def get_launcher(self):
-    return  self._launcher
+    return self._launcher
 
   def get_header(self):
     return self._header
+
+  def _check_consistency_with_user_options(self):
+    user_options = self._context.get_user_options()
+    for gemm in self.gemm_list:
+      if not gemm.is_strict_math() == user_options.exact_contraction_length:
+        msg = 'gemm list is not consistent with user options. '
+        msg += f'`strict_math` in gemm descr. set to {gemm.is_strict_math()}, '
+        msg += f'but `exact_contraction_length` is set to {user_options.exact_contraction_length}'
+        raise RuntimeError(msg)
 
   def _name_operands(self, gemm_list: List[GemmDescr]):
     tmp_counter = 0
@@ -189,7 +204,7 @@ class Generator:
     for gemm in gemm_list:
       local_list = [gemm.mat_a, gemm.mat_b, gemm.mat_c]
 
-      # NOTE: to be on the sage side we init all matrix names with None
+      # NOTE: to be on the safe side we init all matrix names with None
       for matrix in local_list:
         matrix.name = None
 
@@ -245,9 +260,8 @@ class Generator:
   def _write_kernel_meta_data(self, writer):
     writer('// meta data:')
     glb_matrices = self._scopes.get_global_scope().values()
-    delimiter = '; '
     for matrix in glb_matrices:
-      writer(f'// {matrix.obj.gen_descr(delimiter)}')
+      writer(f'// {matrix.obj.gen_descr()}')
 
     writer.new_line()
     for item in self.gemm_list:
@@ -255,7 +269,7 @@ class Generator:
     writer.new_line()
 
   def _generate_scalar_param_list(self, with_types=True):
-    scalar_type = self._vm.fp_as_str() if with_types else ''
+    scalar_type = self._context.fp_as_str() if with_types else ''
     last_gemm = self.gemm_list[-1]
     params = []
     if not isinstance(last_gemm.alpha, (float, int)):
@@ -269,10 +283,11 @@ class Generator:
     return params
 
   def _generate_base_params_list(self, symbol_list, with_types=True):
+    fp_as_str = self._context.fp_as_str()
     params = []
     for symbol in symbol_list:
       ptr_type = Addressing.addr2ptr_type(symbol.obj.addressing)
-      batch_type = f'{self._vm.fp_as_str()}{ptr_type}' if with_types else ''
+      batch_type = f'{fp_as_str}{ptr_type}' if with_types else ''
       offset_type = 'unsigned' if with_types else ''
       params.extend([f'{batch_type} {symbol.name}',
                      f'{offset_type} {get_extra_offset_name(symbol)}'])
@@ -295,8 +310,11 @@ class Generator:
                                                   with_types=True))
     params = ', '.join(params)
     total_num_threads_per_block = self._num_threads * self._shr_mem_obj.get_mults_per_block()
-    launch_bounds = self._vm.lexic.get_launch_bounds(total_num_threads_per_block)
-    return f'{self._vm.lexic.kernel_type} {launch_bounds} kernel_{self._base_kernel_name}({params})'
+
+    lexic = self._context.get_vm().lexic
+
+    launch_bounds = lexic.get_launch_bounds(total_num_threads_per_block)
+    return f'{lexic.kernel_type} {launch_bounds} kernel_{self._base_kernel_name}({params})'
 
   def _generate_launcher_proto(self, with_defaults=True):
     global_symbols = self._scopes.get_global_scope().values()
@@ -353,4 +371,5 @@ class Generator:
     return f'launcher_{self._base_kernel_name}({args});'
 
   def _get_2d_block_id(self):
-    return f'{self._vm.lexic.threadIdx_y} + {self._vm.lexic.blockDim_y} * {self._vm.lexic.blockIdx_x}'
+    lexic = self._context.get_vm().lexic
+    return f'{lexic.thread_idx_y} + {lexic.block_dim_y} * {lexic.block_idx_x}'

@@ -1,10 +1,10 @@
+from abc import abstractmethod
+from typing import Union
+import enum
 from chainforge.common.matrix import Matrix
 from chainforge.backend.instructions import AbstractShrMemWrite
 from chainforge.backend.symbol import SymbolType, Symbol
 from chainforge.backend.exceptions import InternalError
-from abc import abstractmethod
-from typing import Union
-import enum
 
 
 class ShrMemLoaderType(enum.Enum):
@@ -14,7 +14,7 @@ class ShrMemLoaderType(enum.Enum):
 
 class AbstractShrMemLoader(AbstractShrMemWrite):
   def __init__(self, **kwargs):
-    super(AbstractShrMemLoader, self).__init__(kwargs['vm'])
+    super(AbstractShrMemLoader, self).__init__(kwargs['context'])
     self._dest = kwargs['dest']
     self._src = kwargs['src']
     self._shr_mem = kwargs['shr_mem']
@@ -34,8 +34,7 @@ class AbstractShrMemLoader(AbstractShrMemWrite):
 
   def gen_code(self, writer) -> None:
     writer.new_line()
-
-    lhs = f'{self._vm.fp_as_str()}* {self._dest.name}'
+    lhs = f'{self._fp_as_str}* {self._vm.lexic.restrict_kw} {self._dest.name}'
     rhs = f'{self._shr_mem.name}[{self._shr_mem_offset}]'
     writer(f'{lhs} = &{rhs};')
 

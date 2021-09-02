@@ -1,5 +1,5 @@
 from chainforge.common import DenseMatrix
-from chainforge.common import vm_factory
+from chainforge.common import Context
 from chainforge.common.aux import generate_tmp_matrix
 from chainforge.common import GemmDescr, FloatingPointType, Addressing
 from chainforge.backend.generator import Generator
@@ -30,11 +30,11 @@ gemm_list = [GemmDescr(trans_a=False,
                        trans_b=True,
                        a=tmp1, b=mat_b, c=mat_q)]
 
-vm = vm_factory(name='nvidia',
-                sub_name='sm_60',
-                fp_type=FloatingPointType.FLOAT)
+context = Context(name='nvidia',
+                  sub_name='sm_60',
+                  fp_type=FloatingPointType.FLOAT)
 
-generator = Generator(gemm_list, vm)
+generator = Generator(gemm_list, context)
 generator.generate()
 
 print(generator.get_launcher())

@@ -1,5 +1,4 @@
-from .abstract_instruction import AbstractInstruction
-from chainforge.common.vm import VM
+from chainforge.common import Context
 from chainforge.common.matrix import Matrix
 from chainforge.common.basic_types import Addressing
 from chainforge.common.aux import get_2d_block_id, get_extra_offset_name
@@ -7,14 +6,15 @@ from chainforge.common.basic_types import DataFlowDirection
 from chainforge.backend.symbol import Symbol, SymbolType, DataView
 from chainforge.backend.writer import Writer
 from chainforge.backend.exceptions import InternalError, GenerationError
+from .abstract_instruction import AbstractInstruction
 
 
 class GetElementPtr(AbstractInstruction):
   def __init__(self,
-               vm: VM,
+               context: Context,
                src: Symbol,
                dest: Symbol):
-    super(GetElementPtr, self).__init__(vm)
+    super(GetElementPtr, self).__init__(context)
 
     if src.stype != SymbolType.Batch:
       raise InternalError('ptr: operand `src` is not in a batch')
@@ -61,7 +61,7 @@ class GetElementPtr(AbstractInstruction):
     rhs = f'&{self._src.name}[{address}]'
 
     lhs = 'const ' if matrix.direction == DataFlowDirection.SOURCE else ''
-    lhs += f'{self._vm.fp_as_str()} * const __restrict__ {self._dest.name}'
+    lhs += f'{self._fp_as_str} * const {self._vm.lexic.restrict_kw} {self._dest.name}'
     writer(f'{lhs} = {rhs};')
 
   def __str__(self) -> str:

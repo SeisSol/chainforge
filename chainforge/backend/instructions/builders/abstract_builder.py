@@ -1,11 +1,15 @@
 from abc import ABC
-from ..abstract_instruction import AbstractInstruction
 from typing import List
+from chainforge.common import Context
+from ..abstract_instruction import AbstractInstruction
 
 
 class AbstractBuilder(ABC):
-  def __init__(self, vm, scopes):
-    self._vm = vm
+  def __init__(self, context, scopes):
+    if not isinstance(context, Context):
+      raise RuntimeError(f'received wrong type, expected Context, given {type(context)}')
+
+    self._context = context
     self._scopes = scopes
     self._instructions = []
 

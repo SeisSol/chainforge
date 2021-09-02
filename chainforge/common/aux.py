@@ -16,7 +16,7 @@ def generate_tmp_matrix(op1: Matrix, op2: Matrix, trans_op1: bool = False, trans
 
 
 def get_2d_block_id(vm: VM):
-  return f'{vm.lexic.threadIdx_y} + {vm.lexic.blockDim_y} * {vm.lexic.blockIdx_x}'
+  return f'{vm.lexic.thread_idx_y} + {vm.lexic.block_dim_y} * {vm.lexic.block_idx_x}'
 
 
 def get_extra_offset_name(symbol: Symbol):

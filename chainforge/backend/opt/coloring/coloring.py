@@ -1,6 +1,6 @@
-from .vertex import Vertex
 from copy import copy
 from typing import List, Dict, Set, Union
+from .vertex import Vertex
 
 
 class VertexStack:
@@ -56,7 +56,7 @@ class GraphColoring:
     return vertex2object
 
   def print_graph(self) -> None:
-    print('~'*80)
+    print('~' * 80)
     for vertex in self._graph:
       print(vertex)
 

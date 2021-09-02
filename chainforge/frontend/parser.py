@@ -60,7 +60,6 @@ class CustomTransformer(Transformer):
       raise ValueError(f'symbol {name} was not defined')
     return ScalarNode(name) if var.obj_type == ObjType.SCALAR else MatrixNode(name, is_trans)
 
-
   def def_create_scalar(self, token):
     (token,) = token
     self.symbol_table.add(name=token.children[0].value,
@@ -96,7 +95,7 @@ class CustomTransformer(Transformer):
   def def_addressing(self, mode):
     (mode, ) = mode
     allowed = ['none', 'strided', 'pointer_based']
-    if not mode in allowed:
+    if mode not in allowed:
       allowed_str = ', '.join(allowed)
       raise ValueError(f'allowed addr. modes are {allowed_str}. Given: {mode}')
     return 'addressing', mode.value
@@ -116,47 +115,47 @@ class Parser:
   def __init__(self):
     self.calc_parser = Lark(r"""
       prog : construct*
-           
+
       construct : definitions
                 | assign                               -> fold
-      
+
       ?definitions : matrix_definition                 -> def_create_matrix
                    | scalar_definition                 -> def_create_scalar
-      
-      matrix_definition : STRING "=" matrix_desc ";"  
+
+      matrix_definition : STRING "=" matrix_desc ";"
       scalar_definition : STRING "=" SIGNED_FLOAT ";"
-      
+
       matrix_desc : "{" pair ("," pair)~3 "}"
       pair : "rows" ":" INT                           -> def_num_rows
            | "cols" ":" INT                           -> def_num_cols
            | "addr" ":" STRING                        -> def_addressing
            | "bbox" ":" list                          -> def_int_list
-                
+
       list : "[" INT ("," INT)~3 "]"
-           
+
       assign : STRING "=" expr kernel_name ";"         -> assign
-      
+
       ?kernel_name: "->" STRING
-      
+
       expr : term "+" expr                             -> add
            | term                                      -> single_term
-      
+
       term : factor "*" term                           -> multiply
            | factor                                    -> single_factor
-      
+
       factor : "(" expr ")"                            -> parentheses
              | STRING                                  -> id
              | STRING"^""T"                            -> id_trans
              | SIGNED_FLOAT                            -> def_immediate_scalar
-      
+
       STRING : /[a-zA-Z0-9_.-]{2,}/
       COMMENT : "#" /[^\n]/*
-      
+
       %import common.WORD
       %import common.INT
       %import common.SIGNED_FLOAT
       %import common.WS
-      
+
       %ignore WS
       %ignore COMMENT
       """, start='prog', parser='lalr')

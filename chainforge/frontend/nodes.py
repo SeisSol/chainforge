@@ -24,6 +24,7 @@ class VarNode(Node):
 
 class ScalarNode(VarNode):
   _counter = 0
+
   def __init__(self, name):
     super().__init__(name=name)
 
