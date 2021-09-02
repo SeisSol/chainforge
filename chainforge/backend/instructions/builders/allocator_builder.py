@@ -1,11 +1,11 @@
-from .abstract_builder import AbstractBuilder
+from abc import abstractmethod
+from typing import Union
 from chainforge.common import Context, VM
 from chainforge.backend.scopes import Scopes
 from chainforge.backend.symbol import Symbol, SymbolType
 from chainforge.backend.instructions.allocate import RegisterAlloc, ShrMemAlloc
 from chainforge.backend.data_types import ShrMemObject, RegMemObject
-from abc import abstractmethod
-from typing import Union
+from .abstract_builder import AbstractBuilder
 
 
 class AbstractAllocBuilder(AbstractBuilder):
@@ -30,7 +30,7 @@ class ShrMemAllocBuilder(AbstractAllocBuilder):
     super(ShrMemAllocBuilder, self).__init__(context, scopes)
     self._counter = 0
 
-  def build(self, size: Union[int, None] = None):
+  def build(self, size: Union[int, None]=None):
     self._reset()
     name = self._name_new_symbol()
     self._obj = ShrMemObject(name, size)
@@ -54,7 +54,7 @@ class RegistersAllocBuilder(AbstractAllocBuilder):
     super(RegistersAllocBuilder, self).__init__(context, scopes)
     self._counter = 0
 
-  def build(self, size: int, init_value: Union[float, None] = None):
+  def build(self, size: int, init_value: Union[float, None]=None):
     self._reset()
     name = self._name_new_symbol()
     self._obj = RegMemObject(name, size)

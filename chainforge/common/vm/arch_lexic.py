@@ -4,12 +4,12 @@ from chainforge.backend.exceptions import GenerationError
 
 class AbstractArchLexic(ABC):
   def __init__(self):
-    self.threadIdx_x = None
-    self.threadIdx_y = None
-    self.threadIdx_z = None
-    self.blockDim_y = None
-    self.blockDim_z = None
-    self.blockIdx_x = None
+    self.thread_idx_x = None
+    self.thread_idx_y = None
+    self.thread_idx_z = None
+    self.block_dim_y = None
+    self.block_dim_z = None
+    self.block_idx_x = None
     self.stream_type = None
     self.kenrnel_type = None
     self.shr_mem_kw = None
@@ -33,12 +33,12 @@ class AbstractArchLexic(ABC):
 class AmdArchLexic(AbstractArchLexic):
   def __init__(self):
     AbstractArchLexic.__init__(self)
-    self.threadIdx_y = 'hipThreadIdx_y'
-    self.threadIdx_x = 'hipThreadIdx_x'
-    self.threadIdx_z = 'hipThreadIdx_z'
-    self.blockIdx_x = 'hipBlockIdx_x'
-    self.blockDim_y = 'hipBlockDim_y'
-    self.blockDim_z = 'hipBlockDim_z'
+    self.thread_idx_y = 'hipThreadIdx_y'
+    self.thread_idx_x = 'hipThreadIdx_x'
+    self.thread_idx_z = 'hipThreadIdx_z'
+    self.block_idx_x = 'hipBlockIdx_x'
+    self.block_dim_y = 'hipBlockDim_y'
+    self.block_dim_z = 'hipBlockDim_z'
     self.stream_type = 'hipStream_t'
     self.kernel_type = '__global__ void'
     self.shr_mem_kw = '__shared__'
@@ -57,12 +57,12 @@ class AmdArchLexic(AbstractArchLexic):
 class NvidiaArchLexic(AbstractArchLexic):
   def __init__(self):
     AbstractArchLexic.__init__(self)
-    self.threadIdx_y = 'threadIdx.y'
-    self.threadIdx_x = 'threadIdx.x'
-    self.threadIdx_z = 'threadIdx.z'
-    self.blockIdx_x = 'blockIdx.x'
-    self.blockDim_y = 'blockDim.y'
-    self.blockDim_z = 'blockDim.z'
+    self.thread_idx_y = 'threadIdx.y'
+    self.thread_idx_x = 'threadIdx.x'
+    self.thread_idx_z = 'threadIdx.z'
+    self.block_idx_x = 'blockIdx.x'
+    self.block_dim_y = 'blockDim.y'
+    self.block_dim_z = 'blockDim.z'
     self.stream_name = 'cudaStream_t'
     self.kernel_type = '__global__ void'
     self.shr_mem_kw = '__shared__'

@@ -1,11 +1,11 @@
-from .abstract import AbstractOptStage, Context, AbstractInstruction
+from typing import List, Dict, Set, Union
+from copy import copy
+from collections import OrderedDict
 from chainforge.backend.symbol import Symbol
 from chainforge.backend.instructions import Gemm, StoreRegToShr
 from chainforge.backend.instructions.loaders import AbstractShrMemLoader
 from chainforge.backend.symbol import SymbolType
-from typing import List, Dict, Set, Union
-from copy import copy
-from collections import OrderedDict
+from .abstract import AbstractOptStage, Context, AbstractInstruction
 
 
 class LivenessAnalysis(AbstractOptStage):

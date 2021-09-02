@@ -1,7 +1,7 @@
-from .allocator_builder import AbstractBuilder
+from typing import Tuple, Dict
 from chainforge.common import Context, VM
 from chainforge.backend.scopes import Scopes
-from chainforge.backend.symbol import  Symbol, SymbolType
+from chainforge.backend.symbol import Symbol, SymbolType
 from chainforge.backend.instructions import Gemm
 from chainforge.backend.instructions.loaders import shm_mem_loader_factory, AbstractShrMemLoader
 from chainforge.backend.instructions.loaders import ShrMemLoaderType
@@ -11,7 +11,7 @@ from chainforge.backend.instructions import SyncThreads
 from chainforge.common.matrix import Matrix
 from chainforge.backend.exceptions import InternalError
 from chainforge.common.descriptions import GemmDescr
-from typing import Tuple, Dict
+from .allocator_builder import AbstractBuilder
 
 
 class GemmBuilder(AbstractBuilder):
@@ -77,7 +77,7 @@ class GemmBuilder(AbstractBuilder):
         if self._descr.trans_a and prev_loader.get_loader_type() == ShrMemLoaderType.NOT_TRANSPOSED:
           # means: data cannot be reused. we need to reload it again and traspose on the fly.
           # additionally, we need to remove aliased symbol to avoid clashes
-          #self._scopes.delete_symbol(self._op1)
+          # self._scopes.delete_symbol(self._op1)
           self._scopes.add_scope()
           prev_symbol = prev_loader.get_src()
           self._mem_region_a, load_op1 = self._make_loader_and_symbol(prev_symbol, is_transpose=self._descr.trans_a)

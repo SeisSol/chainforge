@@ -1,10 +1,10 @@
+from abc import abstractmethod
+from typing import Union
+import enum
 from chainforge.common.matrix import Matrix
 from chainforge.backend.instructions import AbstractShrMemWrite
 from chainforge.backend.symbol import SymbolType, Symbol
 from chainforge.backend.exceptions import InternalError
-from abc import abstractmethod
-from typing import Union
-import enum
 
 
 class ShrMemLoaderType(enum.Enum):

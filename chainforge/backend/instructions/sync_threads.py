@@ -1,9 +1,6 @@
-from .abstract_instruction import AbstractInstruction
 from chainforge.common import Context
-from chainforge.common.basic_types import FloatingPointType
-from chainforge.backend.symbol import Symbol, SymbolType
 from chainforge.backend.writer import Writer
-from chainforge.backend.exceptions import InternalError
+from .abstract_instruction import AbstractInstruction
 
 
 class SyncThreads(AbstractInstruction):

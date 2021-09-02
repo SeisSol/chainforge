@@ -1,6 +1,5 @@
-from chainforge.common import Context
-from math import floor
 from abc import ABC, abstractmethod
+from chainforge.common import Context
 
 
 class AbstractThreadBlockPolicy(ABC):
@@ -8,7 +7,7 @@ class AbstractThreadBlockPolicy(ABC):
     self._context: Context = context
     self._mem_per_mult: int = mem_per_mult
     self._num_threads: int = num_threads
-    
+
     vm = self._context.get_vm()
     self._max_blocks = vm.hw_descr.max_block_per_sm
     self._max_allowed_mem = vm.hw_descr.max_local_mem_size_per_block

@@ -1,9 +1,9 @@
+from math import ceil
+from chainforge.common.matrix import Matrix
+from chainforge.backend.exceptions import InternalError
 from .shr_mem_loader import ExtendedPatchLoader, ExactPatchLoader
 from .shr_trans_mem_loader import ExtendedTransposePatchLoader, ExactTransposePatchLoader
 from .abstract_loader import ShrMemLoaderType, AbstractShrMemLoader
-from chainforge.common.matrix import Matrix
-from chainforge.backend.exceptions import InternalError
-from math import ceil
 
 
 def shm_mem_loader_factory(context, dest, src, shr_mem, num_threads, load_and_transpose=False):

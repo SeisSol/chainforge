@@ -1,13 +1,13 @@
+from typing import List, Dict, Set
+from chainforge.common import Context
+from chainforge.backend.symbol import Symbol
+from chainforge.backend.instructions import AbstractInstruction
+from chainforge.backend.data_types import ShrMemObject
 from .liveness import LivenessAnalysis
 from .mem_region_allocation import MemoryRegionAllocation, Region
 from .shr_mem_analyzer import ShrMemOpt
 from .sync_threads import SyncThreadsOpt
 from .remove_redundancy import RemoveRedundancyOpt
-from chainforge.common import Context
-from chainforge.backend.symbol import Symbol
-from chainforge.backend.instructions import AbstractInstruction
-from chainforge.backend.data_types import ShrMemObject
-from typing import List, Dict, Set
 
 
 class OptimizationStage:
@@ -46,6 +46,6 @@ class OptimizationStage:
     opt = RemoveRedundancyOpt(self._context, self._instrs)
     opt.apply()
     self._instrs = opt.get_instructions()
-    
+
   def get_instructions(self):
     return self._instrs

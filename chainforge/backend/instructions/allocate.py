@@ -1,9 +1,9 @@
-from .abstract_instruction import AbstractInstruction
+from typing import Union
 from chainforge.common import Context
 from chainforge.backend.symbol import Symbol
 from chainforge.backend.exceptions import InternalError
 from chainforge.backend.writer import Writer
-from typing import Union
+from .abstract_instruction import AbstractInstruction
 
 
 class RegisterAlloc(AbstractInstruction):
@@ -11,7 +11,7 @@ class RegisterAlloc(AbstractInstruction):
                context: Context,
                dest: Symbol,
                size: int,
-               init_value: Union[float, None] = None):
+               init_value: Union[float, None]=None):
     super(RegisterAlloc, self).__init__(context)
     self._size = size
     self._init_value = init_value
@@ -60,7 +60,7 @@ class ShrMemAlloc(AbstractInstruction):
     type_as_str = f'{self._vm.lexic.shr_mem_kw} __align__({alignment}) {self._fp_as_str}'
     writer(f'{type_as_str} {common_shrmem}[{common_shrmem_size}];')
 
-    address = f'{shrmem_obj.get_size_per_mult()} * {self._vm.lexic.threadIdx_y}'
+    address = f'{shrmem_obj.get_size_per_mult()} * {self._vm.lexic.thread_idx_y}'
     writer(f'{self._fp_as_str} * {shrmem_obj.name} = &{common_shrmem}[{address}];')
 
   def is_ready(self):

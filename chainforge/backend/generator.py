@@ -1,8 +1,11 @@
-from .data_types import ShrMemObject, RegMemObject
+from typing import List, Union, Type
+from copy import deepcopy
+import hashlib
 from chainforge.common import GemmDescr
 from chainforge.common import Context
 from chainforge.common import Addressing, GeneralLexicon
 from chainforge.common.aux import get_extra_offset_name
+from .data_types import ShrMemObject, RegMemObject
 from .opt import OptimizationStage
 from .scopes import Scopes
 from .symbol import Symbol, SymbolType
@@ -12,10 +15,6 @@ from .instructions import ShrMemAllocBuilder, RegistersAllocBuilder
 from .writer import Writer
 from .thread_block_policies import AbstractThreadBlockPolicy, SimpleThreadBlockPolicy
 from .exceptions import GenerationError
-from typing import List, Union
-from copy import deepcopy
-import hashlib
-from typing import Type
 
 
 class Generator:
@@ -182,7 +181,7 @@ class Generator:
     return self._kernel
 
   def get_launcher(self):
-    return  self._launcher
+    return self._launcher
 
   def get_header(self):
     return self._header
@@ -195,7 +194,7 @@ class Generator:
         msg += f'`strict_math` in gemm descr. set to {gemm.is_strict_math()}, '
         msg += f'but `exact_contraction_length` is set to {user_options.exact_contraction_length}'
         raise RuntimeError(msg)
-    
+
   def _name_operands(self, gemm_list: List[GemmDescr]):
     tmp_counter = 0
     op_counter = 'A'
@@ -311,9 +310,9 @@ class Generator:
                                                   with_types=True))
     params = ', '.join(params)
     total_num_threads_per_block = self._num_threads * self._shr_mem_obj.get_mults_per_block()
-    
+
     lexic = self._context.get_vm().lexic
-    
+
     launch_bounds = lexic.get_launch_bounds(total_num_threads_per_block)
     return f'{lexic.kernel_type} {launch_bounds} kernel_{self._base_kernel_name}({params})'
 
@@ -373,4 +372,4 @@ class Generator:
 
   def _get_2d_block_id(self):
     lexic = self._context.get_vm().lexic
-    return f'{lexic.threadIdx_y} + {lexic.blockDim_y} * {lexic.blockIdx_x}'
+    return f'{lexic.thread_idx_y} + {lexic.block_dim_y} * {lexic.block_idx_x}'

@@ -1,6 +1,6 @@
+from typing import Type
 from .arch_lexic import AbstractArchLexic, lexic_factory
 from .hw_descr import HwDecription, hw_descr_factory
-from typing import Type
 
 
 class VM:

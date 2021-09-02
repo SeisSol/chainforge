@@ -1,5 +1,6 @@
 from io import StringIO
 
+
 class Block:
   def __init__(self, writer):
     self.writer = writer

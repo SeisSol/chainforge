@@ -1,10 +1,10 @@
-from .abstract_builder import AbstractBuilder
 from chainforge.common import Context, VM
 from chainforge.backend.scopes import Scopes, Symbol
 from chainforge.common.matrix import Matrix
 from chainforge.backend.symbol import SymbolType
 from chainforge.backend.instructions import GetElementPtr
 from chainforge.backend.exceptions import InternalError
+from .abstract_builder import AbstractBuilder
 
 
 class GetElementPtrBuilder(AbstractBuilder):

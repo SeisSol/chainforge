@@ -1,14 +1,14 @@
-from chainforge.common import Context, VM
-from chainforge.backend.writer import Writer
 from abc import ABC, abstractmethod
 from typing import Union
+from chainforge.common import Context, VM
+from chainforge.backend.writer import Writer
 
 
 class AbstractInstruction(ABC):
   def __init__(self, context: Context):
     if not isinstance(context, Context):
       raise RuntimeError(f'received wrong type, expected Context, given {type(context)}')
-    
+
     self._context = context
     self._vm: VM = context.get_vm()
     self._fp_as_str = context.fp_as_str()
@@ -26,7 +26,7 @@ class AbstractInstruction(ABC):
     pass
 
   def gen_mask_threads(self, num_threads) -> str:
-    return f'if ({self._vm.lexic.threadIdx_x} < {num_threads})'
+    return f'if ({self._vm.lexic.thread_idx_x} < {num_threads})'
 
 
 class AbstractShrMemWrite(AbstractInstruction):

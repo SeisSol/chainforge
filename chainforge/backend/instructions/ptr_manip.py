@@ -1,4 +1,3 @@
-from .abstract_instruction import AbstractInstruction
 from chainforge.common import Context
 from chainforge.common.matrix import Matrix
 from chainforge.common.basic_types import Addressing
@@ -7,6 +6,7 @@ from chainforge.common.basic_types import DataFlowDirection
 from chainforge.backend.symbol import Symbol, SymbolType, DataView
 from chainforge.backend.writer import Writer
 from chainforge.backend.exceptions import InternalError, GenerationError
+from .abstract_instruction import AbstractInstruction
 
 
 class GetElementPtr(AbstractInstruction):

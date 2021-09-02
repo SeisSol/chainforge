@@ -1,11 +1,11 @@
-from .abstract_instruction import AbstractInstruction, AbstractShrMemWrite
+from typing import Union
 from chainforge.common import Context
 from chainforge.common.matrix import Matrix
 from chainforge.backend.data_types import RegMemObject
 from chainforge.backend.symbol import Symbol, SymbolType, DataView
 from chainforge.backend.exceptions import InternalError
 from chainforge.backend.writer import Writer
-from typing import Union
+from .abstract_instruction import AbstractInstruction, AbstractShrMemWrite
 
 
 class StoreRegToShr(AbstractShrMemWrite):
@@ -59,7 +59,7 @@ class StoreRegToShr(AbstractShrMemWrite):
       loop = f'for (int i = 0; i < {view.columns}; ++i)'
       with writer.block(loop):
         rhs = f'{self._src.name}[i]'
-        lhs = f'{self._dest.name}[{self._vm.lexic.threadIdx_x} + {view.lead_dim} * i]'
+        lhs = f'{self._dest.name}[{self._vm.lexic.thread_idx_x} + {view.lead_dim} * i]'
         writer(f'{lhs} = {rhs};')
 
   def get_dest(self) -> Symbol:
@@ -116,7 +116,7 @@ class StoreRegToGlb(AbstractInstruction):
       writer.insert_pragma_unroll()
       loop = f'for(int n = 0; n < {dest_view.columns}; ++n)'
       with writer.block(loop):
-        lhs = f'{self._dest.name}[{self._vm.lexic.threadIdx_x} + {dest_view.lead_dim} * n]'
+        lhs = f'{self._dest.name}[{self._vm.lexic.thread_idx_x} + {dest_view.lead_dim} * n]'
 
         rhs = f'{self._alpha} * {self._src.name}[n]'
 

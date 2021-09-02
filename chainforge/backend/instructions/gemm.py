@@ -1,9 +1,9 @@
-from .abstract_instruction import AbstractInstruction
 from chainforge.common import Context
 from chainforge.common.matrix import Matrix
 from chainforge.backend.symbol import Symbol, SymbolType
 from chainforge.backend.exceptions import InternalError, GenerationError
 from chainforge.backend.writer import Writer
+from .abstract_instruction import AbstractInstruction
 
 
 class Gemm(AbstractInstruction):
@@ -14,7 +14,6 @@ class Gemm(AbstractInstruction):
                op1: Symbol,
                op2: Symbol,
                dest: Symbol):
-    
     super(Gemm, self).__init__(context)
     self._trans_a = trans_a
     self._trans_b = trans_b
@@ -76,7 +75,7 @@ class Gemm(AbstractInstruction):
       writer.insert_pragma_unroll()
       with writer.block(f'for (int k = 0; k < {k_range}; ++k)'):
 
-        address = f'{self._vm.lexic.threadIdx_x} + k * {view_op1.lead_dim}'
+        address = f'{self._vm.lexic.thread_idx_x} + k * {view_op1.lead_dim}'
         writer(f'{self._fp_as_str} value = {self._op1.name}[{address}];')
 
         is_requested_layout = view_op2.is_transposed == self._trans_b
@@ -93,18 +92,18 @@ class Gemm(AbstractInstruction):
   def gen_code_with_prefetch(self, writer, view_op1, view_op2, num_active_threads):
     writer(f'// gemm: {self._op1.name} x {self._op2.name}')
     with writer.block(self.gen_mask_threads(num_active_threads)):
-      address = f'{self._vm.lexic.threadIdx_x}'
+      address = f'{self._vm.lexic.thread_idx_x}'
       writer(f'{self._fp_as_str} prefetch = {self._op1.name}[{address}];')
 
       if self._user_options.exact_contraction_length:
         k_range = view_op1.columns
       else:
         k_range = min(view_op1.columns, view_op2.rows)
-      
+
       with writer.block(f'for (int k = 0; k < {k_range - 1}; ++k)'):
 
         writer(f'{self._fp_as_str} value = prefetch;')
-        address = f'{self._vm.lexic.threadIdx_x} + (k + 1) * {view_op1.lead_dim}'
+        address = f'{self._vm.lexic.thread_idx_x} + (k + 1) * {view_op1.lead_dim}'
         writer(f'prefetch = {self._op1.name}[{address}];')
 
         is_requested_layout = view_op2.is_transposed == self._trans_b

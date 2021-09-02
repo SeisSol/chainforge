@@ -1,6 +1,6 @@
-from .abstract_loader import AbstractShrMemLoader, ShrMemLoaderType
 from chainforge.backend.writer import Writer
 from chainforge.backend.symbol import DataView
+from .abstract_loader import AbstractShrMemLoader, ShrMemLoaderType
 
 
 class ExtendedPatchLoader(AbstractShrMemLoader):
@@ -31,7 +31,7 @@ class ExtendedPatchLoader(AbstractShrMemLoader):
     if num_hops > 0:
       writer.insert_pragma_unroll()
       with writer.block(f'for (int i = 0; i < {num_hops}; ++i)'):
-        index = f'{self._vm.lexic.threadIdx_x} + i * {self._num_threads}'
+        index = f'{self._vm.lexic.thread_idx_x} + i * {self._num_threads}'
         lhs = f'{self._dest.name}[{index}]'
         rhs = f'{self._src.name}[{index}]'
         writer(f'{lhs} = {rhs};')
@@ -39,8 +39,8 @@ class ExtendedPatchLoader(AbstractShrMemLoader):
     # the last hop to fill shared mem with data
     if (self._shm_volume % self._num_threads) != 0:
       residue = self._shm_volume - num_hops * self._num_threads
-      with writer.block(f'if ({self._vm.lexic.threadIdx_x} < {residue})'):
-        index = f'{self._vm.lexic.threadIdx_x} + {num_hops * self._num_threads}'
+      with writer.block(f'if ({self._vm.lexic.thread_idx_x} < {residue})'):
+        index = f'{self._vm.lexic.thread_idx_x} + {num_hops * self._num_threads}'
         writer(f'{self._dest.name}[{index}] = {self._src.name}[{index}];')
 
   def __str__(self):
@@ -76,12 +76,12 @@ class ExactPatchLoader(AbstractShrMemLoader):
 
         writer.insert_pragma_unroll()
         with writer.block(f'for (int counter = 0; counter < {num_hops}; ++counter)'):
-          shr_mem_index = f'{self._vm.lexic.threadIdx_x} + ' \
-            f'counter * {self._num_threads} + i * {self._lid_dim}'
+          shr_mem_index = f'{self._vm.lexic.thread_idx_x} + '
+          shr_mem_index += f'counter * {self._num_threads} + i * {self._lid_dim}'
           lhs = f'{self._dest.name}[{shr_mem_index}]'
 
-          glob_mem_index = f'{self._vm.lexic.threadIdx_x} + ' \
-            f'counter * {self._num_threads} + i * {matrix.num_rows}'
+          glob_mem_index = f'{self._vm.lexic.thread_idx_x} + '
+          glob_mem_index += f'counter * {self._num_threads} + i * {matrix.num_rows}'
           rhs = f'{self._src.name}[{glob_mem_index}]'
 
           writer(f'{lhs} = {rhs};')
@@ -89,10 +89,10 @@ class ExactPatchLoader(AbstractShrMemLoader):
       # the last hop to fill shared mem with data
       if (self._lid_dim % self._num_threads) != 0:
         residue = self._lid_dim - num_hops * self._num_threads
-        with writer.block(f'if ({self._vm.lexic.threadIdx_x} < {residue})'):
+        with writer.block(f'if ({self._vm.lexic.thread_idx_x} < {residue})'):
           finial_offset = num_hops * self._num_threads
-          shr_mem_index = f'{self._vm.lexic.threadIdx_x} + {finial_offset} + i * {self._lid_dim}'
-          glb_mem_index = f'{self._vm.lexic.threadIdx_x} + {finial_offset} + i * {matrix.num_rows}'
+          shr_mem_index = f'{self._vm.lexic.thread_idx_x} + {finial_offset} + i * {self._lid_dim}'
+          glb_mem_index = f'{self._vm.lexic.thread_idx_x} + {finial_offset} + i * {matrix.num_rows}'
           writer(f'{self._dest.name}[{shr_mem_index}] = {self._src.name}[{glb_mem_index}];')
 
   def __str__(self):

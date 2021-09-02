@@ -1,10 +1,10 @@
+from collections import OrderedDict
+from copy import copy
+from typing import Dict, Set, Union, List, Tuple
+from chainforge.backend.symbol import Symbol
 from .abstract import AbstractOptStage, Context
 from .coloring import Vertex
 from .coloring import GraphColoring
-from collections import OrderedDict
-from chainforge.backend.symbol import Symbol
-from copy import copy
-from typing import Dict, Set, Union, List, Tuple
 
 
 class Region:
@@ -29,7 +29,7 @@ class Region:
 class MemoryRegionAllocation(AbstractOptStage):
   def __init__(self, context: Context, live_map):
     super(MemoryRegionAllocation, self).__init__(context)
-    
+
     self._live_map: Dict[int, Set[Symbol]] = live_map
     self._vertex_counter: int = 0
     self._adj_list: List[Vertex] = []

@@ -1,6 +1,6 @@
-from .abstract import AbstractTransformer, Context, AbstractInstruction
-from chainforge.backend.instructions import StoreRegToGlb
 from typing import List
+from chainforge.backend.instructions import StoreRegToGlb
+from .abstract import AbstractTransformer, Context, AbstractInstruction
 
 
 class RemoveRedundancyOpt(AbstractTransformer):
@@ -22,6 +22,6 @@ class RemoveRedundancyOpt(AbstractTransformer):
       num_remove_instrs += 1
       if isinstance(instr, StoreRegToGlb):
         break
-  
+
     for index in range(num_remove_instrs - 1):
       self._instrs.pop(-1)

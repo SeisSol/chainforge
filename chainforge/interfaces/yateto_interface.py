@@ -5,7 +5,6 @@ class YatetoInterface:
   def __init__(self):
     pass
 
-
   @classmethod
   def deduce_bbox(cls, yateto_ranges, mem_layout):
     """Converts yateto memory layout (bounding boxes) and ranges to GemmForge bounding boxes i.e.,

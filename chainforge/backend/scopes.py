@@ -1,6 +1,6 @@
+from typing import List
 from .exceptions import InternalError
 from .symbol import Symbol
-from typing import List
 
 
 class InverseSymbolTable:
@@ -85,8 +85,8 @@ class Scopes:
       print(symbol)
 
   def print_scopes(self):
-    for level, scope in enumerate(self._inv_tables):
-      print('*'*80)
+    for level, _ in enumerate(self._inv_tables):
+      print('*' * 80)
       self.print_scope(level)
 
   def __contains__(self, obj):

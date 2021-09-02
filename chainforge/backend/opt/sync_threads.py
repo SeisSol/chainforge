@@ -1,8 +1,8 @@
-from .abstract import AbstractTransformer, Context, AbstractInstruction
+from typing import List
 from chainforge.backend.instructions import Gemm, SyncThreads, AbstractShrMemWrite
 from chainforge.backend.symbol import SymbolType
+from .abstract import AbstractTransformer, Context, AbstractInstruction
 from .mem_region_allocation import Region
-from typing import List
 
 
 class SyncThreadsOpt(AbstractTransformer):

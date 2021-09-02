@@ -8,8 +8,8 @@ class Matrix():
                num_rows: int,
                num_cols: int,
                addressing: Addressing,
-               bbox: Union[List[int], None] = None,
-               alias: Union[str, None] = None,
+               bbox: Union[List[int], None]=None,
+               alias: Union[str, None]=None,
                is_tmp: bool = False):
 
     self.name = None
@@ -38,7 +38,6 @@ class Matrix():
 
     else:
       self.bbox = (0, 0, num_rows - 1, num_cols - 1)
-
 
     if isinstance(addressing, Addressing):
       self.addressing = addressing
@@ -88,6 +87,7 @@ class Matrix():
     string += f'bbox: {self.bbox}'
     string += f'}};'
     return string
+
 
 class DenseMatrix(Matrix):
   def __init__(self,

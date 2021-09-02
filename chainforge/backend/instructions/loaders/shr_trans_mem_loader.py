@@ -1,6 +1,6 @@
-from .abstract_loader import AbstractShrMemLoader, ShrMemLoaderType
 from chainforge.backend.writer import Writer
 from chainforge.backend.symbol import DataView
+from .abstract_loader import AbstractShrMemLoader, ShrMemLoaderType
 
 
 def _find_next_prime(number):
@@ -52,20 +52,20 @@ class ExtendedTransposePatchLoader(AbstractShrMemLoader):
         # for-block: main part
         writer.insert_pragma_unroll()
         with writer.block(f'for (int i = 0; i < {num_hops}; ++i)'):
-          writer(f'{tmp_var} = {self._vm.lexic.threadIdx_x} + i * {self._num_threads};')
+          writer(f'{tmp_var} = {self._vm.lexic.thread_idx_x} + i * {self._num_threads};')
 
           shr_mem_index = f'({tmp_var} % {matrix.num_rows}) * {self._lid_dim} + {tmp_var} / {matrix.num_rows}'
-          glb_mem_index = f'{self._vm.lexic.threadIdx_x} + i * {self._num_threads}'
+          glb_mem_index = f'{self._vm.lexic.thread_idx_x} + i * {self._num_threads}'
           writer(f'{self._dest.name}[{shr_mem_index}] = {self._src.name}[{glb_mem_index}];')
 
       # if-block: residual part
       if (self._shm_volume % self._num_threads) != 0:
         residual = self._shm_volume - num_hops * self._num_threads
-        with writer.block(f'if ({self._vm.lexic.threadIdx_x} < {residual})'):
-          writer(f'{tmp_var} = {self._vm.lexic.threadIdx_x} + {num_hops * self._num_threads};')
+        with writer.block(f'if ({self._vm.lexic.thread_idx_x} < {residual})'):
+          writer(f'{tmp_var} = {self._vm.lexic.thread_idx_x} + {num_hops * self._num_threads};')
 
           shr_mem_index = f'({tmp_var} % {matrix.num_rows}) * {self._lid_dim} + {tmp_var} / {matrix.num_rows}'
-          glb_mem_index = f'{self._vm.lexic.threadIdx_x} + {num_hops * self._num_threads}'
+          glb_mem_index = f'{self._vm.lexic.thread_idx_x} + {num_hops * self._num_threads}'
           writer(f'{self._dest.name}[{shr_mem_index}] = {self._src.name}[{glb_mem_index}];')
 
   def __str__(self):
@@ -104,11 +104,11 @@ class ExactTransposePatchLoader(AbstractShrMemLoader):
         # for-block: main part
         writer.insert_pragma_unroll()
         with writer.block(f'for (int counter = 0; counter < {num_hops}; ++counter)'):
-          thread_idx = f'{self._vm.lexic.threadIdx_x} + counter * {self._num_threads}'
+          thread_idx = f'{self._vm.lexic.thread_idx_x} + counter * {self._num_threads}'
           writer(f'int {tmp_var} = {thread_idx} + i * {matrix.get_actual_num_rows()};')
 
-          shr_mem_index = f'({tmp_var} % {matrix.get_actual_num_rows()}) * {self._lid_dim} + ' \
-            f'{tmp_var} / {matrix.get_actual_num_rows()}'
+          shr_mem_index = f'({tmp_var} % {matrix.get_actual_num_rows()}) * {self._lid_dim} + '
+          shr_mem_index += f'{tmp_var} / {matrix.get_actual_num_rows()}'
 
           glb_mem_index = f'{thread_idx} + i * {matrix.num_rows}'
           writer(f'{self._dest.name}[{shr_mem_index}] = {self._src.name}[{glb_mem_index}];')
@@ -117,13 +117,13 @@ class ExactTransposePatchLoader(AbstractShrMemLoader):
       if (matrix.get_actual_num_rows() % self._num_threads) != 0:
         residual = matrix.get_actual_num_rows() - num_hops * self._num_threads
 
-        with writer.block(f'if ({self._vm.lexic.threadIdx_x} < {residual})'):
+        with writer.block(f'if ({self._vm.lexic.thread_idx_x} < {residual})'):
           finial_offset = num_hops * self._num_threads
-          thread_idx = f'{self._vm.lexic.threadIdx_x} + {finial_offset}'
+          thread_idx = f'{self._vm.lexic.thread_idx_x} + {finial_offset}'
           writer(f'int {tmp_var} = {thread_idx} + i * {matrix.get_actual_num_rows()};')
 
-          shr_mem_index = f'({tmp_var} % {matrix.get_actual_num_rows()}) * {self._lid_dim} + ' \
-            f'{tmp_var} / {matrix.get_actual_num_rows()}'
+          shr_mem_index = f'({tmp_var} % {matrix.get_actual_num_rows()}) * {self._lid_dim} + '
+          shr_mem_index += f'{tmp_var} / {matrix.get_actual_num_rows()}'
           glb_mem_index = f'{thread_idx} + i * {matrix.num_rows}'
           writer(f'{self._dest.name}[{shr_mem_index}] = {self._src.name}[{glb_mem_index}];')
 

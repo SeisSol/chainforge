@@ -39,7 +39,7 @@ class Symbol:
     return self._users
 
   def get_fist_user(self):
-    return  self._users[0]
+    return self._users[0]
 
   def __str__(self):
     return f'name: {self.name}, type: {self.stype}'

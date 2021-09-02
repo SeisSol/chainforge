@@ -1,6 +1,6 @@
+from chainforge.backend.exceptions import GenerationError
 from .context import Context
 from .basic_types import DataFlowDirection, FloatingPointType
-from chainforge.backend.exceptions import GenerationError
 
 
 class GemmDescr:
@@ -54,7 +54,7 @@ class GemmDescr:
 
   def get_accumulator_size(self):
     return self._n
-  
+
   def is_strict_math(self):
     return self._strict_match
 
@@ -86,7 +86,6 @@ class GemmDescr:
         if self.mat_c.get_actual_num_cols() != self.mat_b.get_actual_num_cols():
           raise GenerationError("Cannot generate a matrix multiplication "
                                 "with given parameters. Matrix C and B (NoTrans) do not match")
-
 
       # the contraction length of A and B can be different
       # due to the fact that matrices in a matrix chain can be aligned
