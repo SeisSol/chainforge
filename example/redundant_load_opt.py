@@ -44,8 +44,8 @@ gemm_list = [GemmDescr(trans_a=True,
                        beta=1.0)]
 
 
-context = Context(name='nvidia',
-                  sub_name='sm_60',
+context = Context(arch='sm_60',
+                  backend='cuda',
                   fp_type=FloatingPointType.FLOAT)
 
 generator = Generator(gemm_list, context)

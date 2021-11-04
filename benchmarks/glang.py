@@ -35,8 +35,8 @@ def main():
   cmd = argparse.ArgumentParser()
   cmd.add_argument('-i', '--input', type=str, help="input file")
   cmd.add_argument('-c', '--config', type=str, help="config file")
-  cmd.add_argument('-a', '--arch', type=str, help='gpu arch (nvidia, amd)')
-  cmd.add_argument('-s', '--sub_arch', type=str, help='sub architecture (nvidia, amd)')
+  cmd.add_argument('-b', '--backend', type=str, help='gpu arch (cuda, hip)')
+  cmd.add_argument('-a', '--arch', type=str, help='architecture e.g., sm_60, gfx906, etc.')
   args = cmd.parse_args()
 
   try:
@@ -61,8 +61,8 @@ def main():
 
   stream = open(args.config, 'r')
   config = yaml.safe_load(stream)
-  context = Context(name=args.arch,
-                    sub_name=args.sub_arch,
+  context = Context(arch=args.arch,
+                    backend=args.backend,
                     fp_type=FloatingPointType.str2enum(config['fp_type']))
 
   kernels = []; launchers = []; headers = []
@@ -83,7 +83,7 @@ def main():
                                      gemm_list,
                                      config,
                                      call_site,
-                                     args.arch)
+                                     args.backend)
 
     benchmarks_names.append(bench_name)
     benchmarks_src.append(bench_generator.generate())
@@ -113,7 +113,7 @@ def main():
     real_size = 8 if config['fp_type'] == 'double' else 4
     file.write(f'set(REAL_SIZE {real_size})\n')
     file.write(f'set(ARCH {args.arch})\n')
-    file.write(f'set(SM_ARCH {args.sub_arch})\n')
+    file.write(f'set(BACKEND {args.backend})\n')
 
 
 if __name__ == '__main__':

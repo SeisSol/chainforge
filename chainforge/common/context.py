@@ -17,11 +17,11 @@ class Options:
 
 class Context:
   def __init__(self,
-               name: str,
-               sub_name: str,
+               arch: str,
+               backend: str,
                fp_type: FloatingPointType,
                options: Options = Options()):
-    self._vm: VM = vm_factory(name, sub_name)
+    self._vm: VM = vm_factory(arch, backend)
     self.fp_type = fp_type
     self._options = options
 
