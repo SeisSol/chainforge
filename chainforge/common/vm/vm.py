@@ -11,7 +11,7 @@ class VM:
     self.lexic = basic_arch_lexic
 
 
-def vm_factory(name: str, sub_name: str):
-  descr = hw_descr_factory(name, sub_name)
-  lexic = lexic_factory(name)
+def vm_factory(arch: str, backend: str):
+  descr = hw_descr_factory(arch, backend)
+  lexic = lexic_factory(backend)
   return VM(hw_descr=descr, basic_arch_lexic=lexic)

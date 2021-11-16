@@ -79,10 +79,10 @@ class NvidiaArchLexic(AbstractArchLexic):
     return f'__launch_bounds__({", ".join(params)})'
 
 
-def lexic_factory(arch_name):
-  if arch_name == "nvidia":
+def lexic_factory(backend):
+  if backend == "cuda":
     return NvidiaArchLexic()
-  elif arch_name == "amd":
+  elif backend == "hip":
     return AmdArchLexic()
   else:
-    raise GenerationError('unknown architecture provided')
+    raise GenerationError(f'unknown backend, given: {backend}')

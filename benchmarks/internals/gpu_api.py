@@ -27,9 +27,9 @@ class GpuAPI:
 
   @classmethod
   def get(self, arch):
-    if arch == 'nvidia':
+    if arch == 'cuda':
       return Cuda()
-    elif arch == 'amd':
+    elif arch == 'hip':
       return Hip()
     else:
       return ValueError('unknown architecture')

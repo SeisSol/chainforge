@@ -4,13 +4,13 @@ from chainforge.common import Addressing
 
 
 class BenchGenerator:
-  def __init__(self, test_name, symbol_table, gemm_list, config, call_site, arch):
+  def __init__(self, test_name, symbol_table, gemm_list, config, call_site, backend):
     self._test_name = test_name
     self._symbol_table = symbol_table
     self._gemm_list = gemm_list
     self._template = None
     self._config = config
-    self._arch = arch
+    self._backend = backend
     self._call_site = call_site
 
   def generate(self):
@@ -52,7 +52,7 @@ class BenchGenerator:
       return 'LayoutType::Trans' if is_trans else 'LayoutType::NoTrans'
 
     # register callbacks
-    self._template.globals['api'] = GpuAPI.get(self._arch)
+    self._template.globals['api'] = GpuAPI.get(self._backend)
     self._template.globals['is_batch'] = is_batch
     self._template.globals['trans2str'] = trans2str
 

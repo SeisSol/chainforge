@@ -10,7 +10,7 @@ include(${PROJECT_SOURCE_DIR}/tmp/cmake_params.cmake)
 find_package(CUDA REQUIRED)
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};
         -std=c++11;
-        -arch=${SM_ARCH};
+        -arch=${ARCH};
 #        -restrict;
         -res-usage;
         -O3;
