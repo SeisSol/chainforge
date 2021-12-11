@@ -53,8 +53,10 @@ class FloatingPointType(enum.Enum):
 
 
 class GeneralLexicon:
+  BATCH_ID_NAME = 'batchId'
   NUM_ELEMENTS = 'numElements'
   EXTRA_OFFSET = '_extraOffset'
   STREAM_PTR_STR = 'streamPtr'
   ALPHA_SYMBOL_NAME = 'alpha'
   BETA_SYMBOL_NAME = 'beta'
+  FLAGS_NAME = 'flags'

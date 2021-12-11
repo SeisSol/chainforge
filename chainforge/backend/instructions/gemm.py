@@ -66,7 +66,9 @@ class Gemm(AbstractInstruction):
         address = f'{k} + {lead_dim} * n'
       else:
         address = f'n + {lead_dim} * {k}'
-      writer(f'{self._dest.name}[n] += {op1_element} * {self._op2.name}[{address}];')
+
+      dest_address = '' if self._dest.obj.size == 1 else '[n]'
+      writer(f'{self._dest.name}{dest_address} += {op1_element} * {self._op2.name}[{address}];')
 
   def gen_code_without_prefetch(self, writer, view_op1, view_op2, num_active_threads):
     writer(f'// gemm: {self._op1.name} x {self._op2.name}')
