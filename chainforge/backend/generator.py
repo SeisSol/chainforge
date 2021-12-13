@@ -18,7 +18,7 @@ from .exceptions import GenerationError
 
 
 class Generator:
-  NAME_ENCODING_LENGTH = 8
+  NAME_ENCODING_LENGTH = 10
 
   def __init__(self,
                gemm_list: List[GemmDescr],
@@ -85,12 +85,14 @@ class Generator:
     with writer.block(f'{proto}'):
       self._write_kernel_meta_data(writer)
 
-      with writer.block(f'if (({self._get_2d_block_id()}) < {GeneralLexicon.NUM_ELEMENTS})'):
-        for instruction in self._ir:
-          if instruction.is_ready():
-            instruction.gen_code(writer)
-          else:
-            raise GenerationError(f'instr is not ready to be generated: {instruction}')
+      writer(f'unsigned {GeneralLexicon.BATCH_ID_NAME} = {self._get_2d_block_id()};')
+      with writer.block(f'if ({self._get_element_size_guard()})'):
+        with writer.block(f'if ({self._get_flag_guard(writer)})'):
+          for instruction in self._ir:
+            if instruction.is_ready():
+              instruction.gen_code(writer)
+            else:
+              raise GenerationError(f'instr is not ready to be generated: {instruction}')
 
     self._kernel = writer.get_src()
 
@@ -240,11 +242,19 @@ class Generator:
 
   def _generate_kernel_name(self):
     global_symbols = self._scopes.get_global_scope().values()
-    glb2str = []
+    long_name = []
     for item in global_symbols:
-      glb2str.append(item.obj.gen_descr())
+      long_name.append(item.obj.gen_descr())
 
-    result = hashlib.md5(', '.join(glb2str).encode())
+    for gemm in self.gemm_list:
+      long_name.extend([
+        str(gemm.alpha),
+        str(gemm.beta),
+        str(gemm.trans_a),
+        str(gemm.trans_b)
+      ])
+
+    result = hashlib.md5(', '.join(long_name).encode())
     md5encoding = result.hexdigest()
     self._base_kernel_name = f'cf_gemms_{md5encoding[:Generator.NAME_ENCODING_LENGTH]}'
 
@@ -282,7 +292,7 @@ class Generator:
 
     return params
 
-  def _generate_base_params_list(self, symbol_list, with_types=True):
+  def _generate_base_params_list(self, symbol_list, with_types=True, with_defaults=False):
     fp_as_str = self._context.fp_as_str()
     params = []
     for symbol in symbol_list:
@@ -294,6 +304,10 @@ class Generator:
 
     batch_size_type = 'size_t' if with_types else ''
     params.append(f'{batch_size_type} {GeneralLexicon.NUM_ELEMENTS}')
+
+    flags_type = 'unsigned*' if with_types else ''
+    default_flags_value = '= nullptr' if with_defaults else ''
+    params.append(f'{flags_type} {GeneralLexicon.FLAGS_NAME} {default_flags_value}')
     return params
 
   def _generate_kernel_base_args(self):
@@ -321,7 +335,8 @@ class Generator:
     params = self._generate_scalar_param_list()
 
     params.extend(self._generate_base_params_list(symbol_list=global_symbols,
-                                                  with_types=True))
+                                                  with_types=True,
+                                                  with_defaults=with_defaults))
 
     default_value = ' = nullptr' if with_defaults else ''
     params.append(f'void* {GeneralLexicon.STREAM_PTR_STR}{default_value}')
@@ -340,11 +355,19 @@ class Generator:
     args.extend(self._generate_base_params_list(symbol_list=symbols,
                                                 with_types=False))
 
+    args.append(f'{GeneralLexicon.FLAGS_NAME}')
     args.append(f'{GeneralLexicon.STREAM_PTR_STR}')
     args = ', '.join(args)
     return f'launcher_{self._base_kernel_name}({args});'
 
-  def generate_call_site(self, mat_name_map, offset_name_map, alpha, beta, num_element, stream=None):
+  def generate_call_site(self,
+                         mat_name_map,
+                         offset_name_map,
+                         alpha,
+                         beta,
+                         num_element,
+                         flags=None,
+                         stream=None):
     args = []
 
     # add scalars
@@ -363,6 +386,10 @@ class Generator:
     # add num. elements
     args.append(num_element)
 
+    # add flags
+    if flags:
+      args.append(flags)
+
     # add streams
     if stream:
       args.append(stream)
@@ -373,3 +400,12 @@ class Generator:
   def _get_2d_block_id(self):
     lexic = self._context.get_vm().lexic
     return f'{lexic.thread_idx_y} + {lexic.block_dim_y} * {lexic.block_idx_x}'
+
+  def _get_element_size_guard(self):
+    return f'{GeneralLexicon.BATCH_ID_NAME} < {GeneralLexicon.NUM_ELEMENTS}'
+
+  def _get_flag_guard(self, writer):
+    writer(f'bool isFlagsProvided = ({GeneralLexicon.FLAGS_NAME} != nullptr);')
+    flag_value = f'static_cast<bool>({GeneralLexicon.FLAGS_NAME}[{GeneralLexicon.BATCH_ID_NAME}])'
+    writer(f'bool allowed = isFlagsProvided ? {flag_value} : true;')
+    return 'allowed'

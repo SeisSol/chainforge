@@ -118,7 +118,8 @@ class StoreRegToGlb(AbstractInstruction):
       with writer.block(loop):
         lhs = f'{self._dest.name}[{self._vm.lexic.thread_idx_x} + {dest_view.lead_dim} * n]'
 
-        rhs = f'{self._alpha} * {self._src.name}[n]'
+        src_address = '' if self._src.obj.size == 1 else '[n]'
+        rhs = f'{self._alpha} * {self._src.name}{src_address}'
 
         if self._beta != 0.0:
             rhs += f' + {self._beta} * {lhs}'
