@@ -100,8 +100,8 @@ int {{ test_name }} () {
 
   // deallocate CPU matrices
   {%- for mat in cpu_matrices %}
-  delete {{ mat.name }};
+  delete [] {{ mat.name }};
   {%- endfor %}
-  delete gpu_res;
+  delete [] gpu_res;
   return 0;
 }
