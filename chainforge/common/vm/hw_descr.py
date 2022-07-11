@@ -112,6 +112,8 @@ def get_known_arch():
   arch['gfx908'] = deepcopy(arch['gfx906'])
   arch['gfx908']['max_reg_per_block'] = 512 * KB
 
+  arch['gfx90a'] = deepcopy(arch['gfx908'])
+
 
   # Intel
   arch['dg1'] = {

@@ -92,11 +92,12 @@ def main():
   enty_point = EnryPointGenerator(benchmarks_names, benchmarks_src, config)
   main_src = enty_point.generate()
   tmp_dir = make_tmp_folder(file_name='tmp')
-  with open(path.join(tmp_dir, 'main.cu'), 'w') as file:
+  file_suffix = 'cu' if args.backend == 'cuda' else 'cpp'
+  with open(path.join(tmp_dir, f'main.{file_suffix}'), 'w') as file:
     file.write(main_src)
 
   # write kernel, launcher and header to files
-  with open(path.join(tmp_dir, 'kernel.cu'), 'w') as file:
+  with open(path.join(tmp_dir, f'kernel.{file_suffix}'), 'w') as file:
     file.write('#include \"chainforge_aux.h\"\n')
     for kernel, launcher in zip(kernels, launchers):
       file.write(kernel)

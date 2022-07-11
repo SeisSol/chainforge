@@ -33,4 +33,4 @@ beta = 1.0;
 
 mat_res = mat_e * mat_c * mat_d + mat_res -> test0;
 mat_res = alpha * mat_res + beta * (mat_a * ((mat_b * mat_c) * mat_d)) -> test1;
-#mat_res = alpha * mat_res + beta * (mat_a * (mat_b * (mat_c * mat_d^T))) -> test2;
+mat_res = alpha * mat_res + beta * (mat_a * (mat_b * (mat_c * mat_d^T))) -> test2;

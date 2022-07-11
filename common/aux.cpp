@@ -32,7 +32,7 @@ namespace cf {
     }
 
     real getRandomNumber() {
-      return static_cast<real>(std::rand()) / RAND_MAX;
+      return static_cast<real>(std::rand()) / static_cast<real>(RAND_MAX);
     }
 
     void initMatrix(real *matrix, int size, size_t numElements) {

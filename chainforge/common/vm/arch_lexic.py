@@ -48,7 +48,7 @@ class AmdArchLexic(AbstractArchLexic):
     self.restrict_kw = '__restrict__'
 
   def get_launch_code(self, func_name, grid, block, stream, func_params):
-    return f'hipLaunchKernelGGL({func_name},{grid},{block},0,{stream},{func_params})'
+    return f'hipLaunchKernelGGL({func_name}, {grid}, {block}, 0, {stream}, {func_params})'
 
   def get_launch_bounds(self, total_num_threads_per_block, min_blocks_per_mp=None):
     return ''
@@ -63,7 +63,7 @@ class NvidiaArchLexic(AbstractArchLexic):
     self.block_idx_x = 'blockIdx.x'
     self.block_dim_y = 'blockDim.y'
     self.block_dim_z = 'blockDim.z'
-    self.stream_name = 'cudaStream_t'
+    self.stream_type = 'cudaStream_t'
     self.kernel_type = '__global__ void'
     self.shr_mem_kw = '__shared__'
     self.dim3_type = 'dim3'
@@ -72,7 +72,7 @@ class NvidiaArchLexic(AbstractArchLexic):
     self.restrict_kw = '__restrict__'
 
   def get_launch_code(self, func_name, grid, block, stream, func_params):
-    return f'{func_name}<<<{grid},{block},0,{stream}>>>({func_params})'
+    return f'{func_name}<<<{grid}, {block}, 0, {stream}>>>({func_params})'
 
   def get_launch_bounds(self, total_num_threads_per_block, min_blocks_per_mp=None):
     params = [str(item) for item in [total_num_threads_per_block, min_blocks_per_mp] if item]
