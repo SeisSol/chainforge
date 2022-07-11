@@ -107,8 +107,8 @@ class Generator:
       writer(f'{lexic.dim3_type} grid({num_blocks}, 1, 1);')
 
       if_stream_exists = f'({GeneralLexicon.STREAM_PTR_STR} != nullptr)'
-      stream_obj = f'static_cast<cudaStream_t>({GeneralLexicon.STREAM_PTR_STR})'
-      writer(f'{lexic.stream_name} stream = {if_stream_exists} ? {stream_obj} : 0;')
+      stream_obj = f'static_cast<{lexic.stream_type}>({GeneralLexicon.STREAM_PTR_STR})'
+      writer(f'{lexic.stream_type} stream = {if_stream_exists} ? {stream_obj} : 0;')
 
       args = self._generate_kernel_base_args()
       args = ', '.join(args)
