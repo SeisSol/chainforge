@@ -37,6 +37,7 @@ elseif(${BACKEND} STREQUAL "hip")
   endif()
 
   #set the CMAKE_MODULE_PATH for the helper cmake files from HIP
+  option(KERNEL_INFO "dump kernel info" OFF)
   set(CMAKE_MODULE_PATH "${HIP_PATH}/cmake" ${CMAKE_MODULE_PATH})
 
   set(GPU_TARGETS ${ARCH})
@@ -50,6 +51,9 @@ elseif(${BACKEND} STREQUAL "hip")
   target_link_libraries(${CMAKE_PROJECT_NAME} hip::device)
   target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE HIP_UNDERHOOD)
   target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -std=c++14 -O3)
+  if (KERNEL_INFO)
+    target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -save-temps)
+  endif()
 else()
   message(FATAL_ERROR "unknown backend provided: ${BACKEND}")
 endif()

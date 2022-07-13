@@ -51,7 +51,8 @@ class AmdArchLexic(AbstractArchLexic):
     return f'hipLaunchKernelGGL({func_name}, {grid}, {block}, 0, {stream}, {func_params})'
 
   def get_launch_bounds(self, total_num_threads_per_block, min_blocks_per_mp=None):
-    return ''
+    params = [str(item) for item in [total_num_threads_per_block, min_blocks_per_mp] if item]
+    return f'__launch_bounds__({", ".join(params)})'
 
 
 class NvidiaArchLexic(AbstractArchLexic):
