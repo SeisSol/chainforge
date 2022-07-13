@@ -1,0 +1,37 @@
+#---------------------------------------------------------------
+iq_0 = {rows: 56, cols: 9, addr: strided, bbox: [0, 0, 56, 9]};
+s1_0 = {rows: 56, cols: 56, addr: none, bbox: [0, 0, 56, 56]};
+s2_0 = {rows: 56, cols: 56, addr: none, bbox: [0, 0, 56, 56]};
+s3_0 = {rows: 56, cols: 56, addr: none, bbox: [0, 0, 56, 56]};
+q0_0 = {rows: 56, cols: 9, addr: strided, bbox: [0, 0, 56, 9]};
+j1_0 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+j2_0 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+j3_0 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+
+
+#---------------------------------------------------------------
+iq_1 = {rows: 56, cols: 9, addr: strided, bbox: [0, 0, 56, 9]};
+s1_1 = {rows: 56, cols: 53, addr: none, bbox: [0, 0, 56, 53]};
+s2_1 = {rows: 56, cols: 54, addr: none, bbox: [0, 0, 56, 54]};
+s3_1 = {rows: 56, cols: 55, addr: none, bbox: [0, 0, 56, 55]};
+q0_1 = {rows: 56, cols: 9, addr: strided, bbox: [0, 0, 56, 9]};
+j1_1 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+j2_1 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+j3_1 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+
+
+#---------------------------------------------------------------
+iq_2 = {rows: 64, cols: 9, addr: strided, bbox: [0, 0, 64, 9]};
+s1_2 = {rows: 64, cols: 53, addr: none, bbox: [0, 0, 64, 53]};
+s2_2 = {rows: 64, cols: 54, addr: none, bbox: [0, 0, 64, 54]};
+s3_2 = {rows: 64, cols: 55, addr: none, bbox: [0, 0, 64, 55]};
+q0_2 = {rows: 64, cols: 9, addr: strided, bbox: [0, 0, 64, 9]};
+j1_2 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+j2_2 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+j3_2 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+
+
+iq_0 = s1_0 * (q0_0 * j1_0) + s2_0 * (q0_0 * j2_0) + s3_0 * (q0_0 * j3_0) -> time0;
+iq_1 = s1_1 * (q0_1 * j1_1) + s2_1 * (q0_1 * j2_1) + s3_1 * (q0_1 * j3_1) -> time1;
+iq_2 = s1_2 * (q0_2 * j1_2) + s2_2 * (q0_2 * j2_2) + s3_2 * (q0_2 * j3_2) -> time2;
+

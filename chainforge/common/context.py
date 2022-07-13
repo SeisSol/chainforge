@@ -28,6 +28,9 @@ class Context:
   def set_fp_type(self, fp_type: FloatingPointType):
     self.fp_type = fp_type
 
+  def bytes_per_real(self):
+    return 8 if self.fp_type == FloatingPointType.DOUBLE else 4
+
   def fp_as_str(self):
     return FloatingPointType.as_str(self.fp_type)
 

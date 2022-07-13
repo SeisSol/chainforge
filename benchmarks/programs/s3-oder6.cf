@@ -1,0 +1,166 @@
+# nodalFlux
+A0 = {rows: 64, cols: 9, addr: strided, bbox: [0, 0, 64, 9]};
+B0 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+C0 = {rows: 64, cols: 49, addr: none, bbox: [0, 0, 64, 49]};
+D0 = {rows: 64, cols: 9, addr: strided, bbox: [0, 0, 64, 9]};
+
+#--------------------------------------------------------------------
+# rotateQAtInterpolationPoints
+
+A1 = {rows: 64, cols: 9, addr: strided, bbox: [0, 0, 64, 9]};
+B1 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+C1 = {rows: 64, cols: 56, addr: none, bbox: [0, 0, 64, 56]};
+D1 = {rows: 64, cols: 9, addr: strided, bbox: [0, 0, 64, 9]};
+
+#--------------------------------------------------------------------
+# addVelocity
+
+A2 = {rows: 32, cols: 56, addr: none, bbox: [0, 0, 32, 56]};
+B2 = {rows: 64, cols: 3, addr: strided, bbox: [0, 0, 56, 3]};
+C2 = {rows: 32, cols: 3, addr: strided, bbox: [0, 0, 32, 3]};
+
+#--------------------------------------------------------------------
+# ader5
+
+A3 = {rows: 32, cols: 9, addr: strided, bbox: [1, 0, 32, 9]};
+B3 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+C3 = {rows: 64, cols: 53, addr: none, bbox: [0, 0, 32, 1]};
+D3 = {rows: 32, cols: 9, addr: strided, bbox: [0, 0, 32, 9]};
+E3 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+F3 = {rows: 64, cols: 54, addr: none, bbox: [0, 0, 32, 2]};
+G3 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+H3 = {rows: 64, cols: 55, addr: none, bbox: [0, 0, 32, 3]};
+
+#--------------------------------------------------------------------
+# ader4
+
+A4 = {rows: 32, cols: 9, addr: strided, bbox: [1, 0, 32, 9]};
+B4 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+C4 = {rows: 64, cols: 53, addr: none, bbox: [0, 0, 32, 7]};
+D4 = {rows: 32, cols: 9, addr: strided, bbox: [0, 0, 32, 9]};
+E4 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+F4 = {rows: 64, cols: 54, addr: none, bbox: [0, 0, 32, 8]};
+G4 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+H4 = {rows: 64, cols: 55, addr: none, bbox: [0, 0, 32, 9]};
+
+#--------------------------------------------------------------------
+# ader3
+
+A5 = {rows: 32, cols: 9, addr: strided, bbox: [1, 0, 32, 9]};
+B5 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+C5 = {rows: 64, cols: 53, addr: none, bbox: [0, 0, 32, 17]};
+D5 = {rows: 32, cols: 9, addr: strided, bbox: [0, 0, 32, 9]};
+E5 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+F5 = {rows: 64, cols: 54, addr: none, bbox: [0, 0, 32, 18]};
+G5 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+H5 = {rows: 64, cols: 55, addr: none, bbox: [0, 0, 32, 19]};
+
+#--------------------------------------------------------------------
+# ader2
+
+A6 = {rows: 64, cols: 9, addr: strided, bbox: [1, 0, 64, 9]};
+B6 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+C6 = {rows: 64, cols: 53, addr: none, bbox: [0, 0, 32, 32]};
+D6 = {rows: 32, cols: 9, addr: strided, bbox: [0, 0, 32, 9]};
+E6 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+F6 = {rows: 64, cols: 54, addr: none, bbox: [0, 0, 32, 33]};
+G6 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+H6 = {rows: 64, cols: 55, addr: none, bbox: [0, 0, 32, 34]};
+
+#--------------------------------------------------------------------
+# ader1
+
+A7 = {rows: 64, cols: 9, addr: strided, bbox: [1, 0, 64, 9]};
+B7 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+C7 = {rows: 64, cols: 53, addr: none, bbox: [0, 0, 64, 53]};
+D7 = {rows: 64, cols: 9, addr: strided, bbox: [0, 0, 64, 9]};
+E7 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+F7 = {rows: 64, cols: 54, addr: none, bbox: [0, 0, 64, 54]};
+G7 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+H7 = {rows: 64, cols: 55, addr: none, bbox: [0, 0, 64, 55]};
+
+#--------------------------------------------------------------------
+# neighboringFlux
+
+A8 = {rows: 64, cols: 9, addr: strided, bbox: [0, 0, 64, 9]};
+B8 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+C8 = {rows: 32, cols: 56, addr: none, bbox: [0, 0, 32, 56]};
+D8 = {rows: 32, cols: 21, addr: none, bbox: [0, 0, 32, 21]};
+E8 = {rows: 64, cols: 21, addr: none, bbox: [0, 0, 64, 21]};
+F8 = {rows: 64, cols: 9, addr: strided, bbox: [0, 0, 64, 9]};
+  
+  
+#--------------------------------------------------------------------
+# localFluxNodal
+
+A9 = {rows: 32, cols: 9, addr: strided, bbox: [0, 0, 32, 9]};
+B9 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+C9 = {rows: 56, cols: 21, addr: none, bbox: [0, 0, 56, 21]};
+D9 = {rows: 64, cols: 9, addr: strided, bbox: [0, 0, 56, 9]};
+
+#--------------------------------------------------------------------
+# localFlux
+
+A10 = {rows: 64, cols: 9, addr: strided, bbox: [0, 0, 64, 9]};
+B10 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+C10 = {rows: 32, cols: 56, addr: none, bbox: [0, 0, 32, 56]};
+D10 = {rows: 64, cols: 21, addr: none, bbox: [0, 0, 64, 21]};
+E10 = {rows: 64, cols: 9, addr: strided, bbox: [0, 0, 64, 9]};
+
+#--------------------------------------------------------------------
+# convertToModal
+
+A11 = {rows: 64, cols: 56, addr: none, bbox: [0, 0, 64, 56]};
+B11 = {rows: 64, cols: 6, addr: strided, bbox: [0, 0, 56, 6]};
+C11 = {rows: 64, cols: 6, addr: strided, bbox: [0, 0, 64, 6]};
+  
+#--------------------------------------------------------------------
+# plConvertToNodal
+
+#A12 = {rows: 64, cols: 56, addr: none, bbox: [0, 0, 64, 56]};
+#B12 = {rows: 64, cols: 6, addr: strided, bbox: [0, 0, 56, 6]};
+#C12 = {rows: 64, cols: 6, addr: strided, bbox: [0, 0, 64, 6]};
+#D12 = {rows: 56, cols: 1, addr: none, bbox: [0, 0, 56, 1]};
+#E12 = {rows: 1, cols: 6, addr: strided, bbox: [0, 0, 1, 6]};
+#F12 = {rows: 64, cols: 6, addr: strided, bbox: [0, 0, 56, 6]};
+  
+#  // C = 1.0 * A x B
+#  // F = 1.0 * D x E + 1.0 * F
+
+#--------------------------------------------------------------------
+# plConvertToNodalNoLoading
+ 
+A13 = {rows: 64, cols: 56, addr: none, bbox: [0, 0, 64, 56]};
+B13 = {rows: 64, cols: 6, addr: strided, bbox: [0, 0, 56, 6]};
+C13 = {rows: 64, cols: 6, addr: strided, bbox: [0, 0, 64, 6]};
+  
+
+#--------------------------------------------------------------------
+# volume
+A14 = {rows: 64, cols: 9, addr: strided, bbox: [0, 0, 64, 9]};
+B14 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+C14 = {rows: 64, cols: 35, addr: none, bbox: [1, 0, 64, 35]};
+D14 = {rows: 64, cols: 9, addr: strided, bbox: [1, 0, 64, 9]};
+E14 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+F14 = {rows: 64, cols: 35, addr: none, bbox: [1, 0, 64, 35]};
+G14 = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+H14 = {rows: 64, cols: 35, addr: none, bbox: [1, 0, 64, 35]};
+  
+
+
+
+D0 = 1.0 * C0 * (A0 * B0) + 1.0 * D0 -> nodalFlux;
+D1 = 1.0 * C1 * (A1 * B1) -> rotateQAtInterpolationPoints;
+C2 = 1.0 * A2 * B2 + 1.0 * C2 -> addVelocity;
+D3 = C3 * (A3 * B3) + F3 * (A3 * E3) + H3 * (A3 * G3) + 1.0 * D3 -> ader5;
+D4 = C4 * (A4 * B4) + F4 * (A4 * E4) + H4 * (A4 * G4) + 1.0 * D4 -> ader4;
+D5 = C5 * (A5 * B5) + F5 * (A5 * E5) + H5 * (A5 * G5) + 1.0 * D5 -> ader3;
+D6 = C6 * (A6 * B6) + F6 * (A6 * E6) + H6 * (A6 * G6) + 1.0 * D6 -> ader2;
+D7 = C7 * (A7 * B7) + F7 * (A7 * E7) + H7 * (A7 * G7) + 1.0 * D7 -> ader1;
+F8 = 1.0 * E8 * (D8 * (C8 * (A8 * B8))) + 1.0 * F8 -> neighboringFlux;
+D9 = 1.0 * C9 * (A9 * B9) + 1.0 * D9 -> localFluxNodal;
+E10 = 1.0 * D10 * (C10 * (A10 * B10)) + 1.0 * E10 -> localFlux;
+C11 = 1.0 * A11 * B11 + 1.0 * C11 -> convertToModal;
+C13 = 1.0 * A13 * B13 -> convertToNodalLoading;
+D14 = C14 * (A14 * B14) + F14 * (A14 * E14) + H14 * (A14 * G14) + 1.0 * D14 -> volume;
+

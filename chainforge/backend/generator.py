@@ -13,7 +13,7 @@ from .instructions import AbstractInstruction
 from .instructions import GetElementPtrBuilder, GemmBuilder
 from .instructions import ShrMemAllocBuilder, RegistersAllocBuilder
 from .writer import Writer
-from .thread_block_policies import AbstractThreadBlockPolicy, SimpleThreadBlockPolicy
+from .thread_block_policies import AbstractThreadBlockPolicy, get_thread_policy
 from .exceptions import GenerationError
 
 
@@ -22,11 +22,10 @@ class Generator:
 
   def __init__(self,
                gemm_list: List[GemmDescr],
-               context: Context,
-               thread_block_policy_type: Type[AbstractThreadBlockPolicy] = SimpleThreadBlockPolicy):
+               context: Context,):
     self.gemm_list: List[GemmDescr] = gemm_list
     self._context: Context = context
-    self._thread_block_policy_type: Type[AbstractThreadBlockPolicy] = thread_block_policy_type
+    self._thread_block_policy_type: Type[AbstractThreadBlockPolicy] = get_thread_policy(context)
     self._base_kernel_name: Union[str, None] = None
 
     self._kernel = None
