@@ -3,6 +3,7 @@
 
 #include "typedef.h"
 #include <vector>
+#include <stddef.h>
 
 namespace cf {
   namespace aux {
