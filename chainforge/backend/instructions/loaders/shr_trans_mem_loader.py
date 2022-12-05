@@ -43,12 +43,11 @@ class ExtendedTransposePatchLoader(AbstractShrMemLoader):
     matrix = self._src.obj
     num_hops = int(self._shm_volume / self._num_threads)
     tmp_var = 'index'
+
     with writer.block():
+      writer(f'int {tmp_var};')
+      writer.new_line()
       if num_hops > 0:
-
-        writer(f'int {tmp_var};')
-        writer.new_line()
-
         # for-block: main part
         writer.insert_pragma_unroll()
         with writer.block(f'for (int i = 0; i < {num_hops}; ++i)'):
