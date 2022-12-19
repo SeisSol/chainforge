@@ -87,6 +87,8 @@ def get_known_arch():
   arch['sm_86']['max_block_per_sm'] = 16
   arch['sm_86']['max_threads_per_sm'] = 1536
 
+  arch['sm_90'] = deepcopy(arch['sm_60'])
+  arch['sm_90']['max_local_mem_size_per_block'] = 228 * KB
 
   # AMD
   # MI50
