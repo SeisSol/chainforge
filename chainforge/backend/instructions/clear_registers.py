@@ -22,10 +22,11 @@ class ClearRegisters(AbstractInstruction):
   def gen_code(self, writer: Writer):
     writer.new_line()
     writer(f'// clear registers')
-    writer.insert_pragma_unroll()
-    with writer.block(f'for (int i = 0; i < {self._src.obj.size}; ++i)'):
-      fp_prefix = 'f' if self._context.fp_type == FloatingPointType.FLOAT else ''
-      writer(f'{self._src.name}[i] = 0.0{fp_prefix};')
+    with writer.block(f'for (int i = 0; i < {self._src.data_view.rows}; ++i)'):
+      writer.insert_pragma_unroll()
+      with writer.block(f'for (int j = 0; j < {self._src.data_view.columns}; ++j)'):
+        fp_prefix = 'f' if self._context.fp_type == FloatingPointType.FLOAT else ''
+        writer(f'{self._src.name}[i][j] = 0.0{fp_prefix};')
 
   def __str__(self) -> str:
     return f'clear_regs {self._src.name}[{self._src.obj.size}];'

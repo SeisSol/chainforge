@@ -7,6 +7,7 @@ class AbstractArchLexic(ABC):
     self.thread_idx_x = None
     self.thread_idx_y = None
     self.thread_idx_z = None
+    self.block_dim_x = None
     self.block_dim_y = None
     self.block_dim_z = None
     self.block_idx_x = None
@@ -37,6 +38,7 @@ class AmdArchLexic(AbstractArchLexic):
     self.thread_idx_x = 'hipThreadIdx_x'
     self.thread_idx_z = 'hipThreadIdx_z'
     self.block_idx_x = 'hipBlockIdx_x'
+    self.block_dim_x = 'hipBlockDim_x'
     self.block_dim_y = 'hipBlockDim_y'
     self.block_dim_z = 'hipBlockDim_z'
     self.stream_type = 'hipStream_t'
@@ -61,6 +63,7 @@ class NvidiaArchLexic(AbstractArchLexic):
     self.thread_idx_x = 'threadIdx.x'
     self.thread_idx_z = 'threadIdx.z'
     self.block_idx_x = 'blockIdx.x'
+    self.block_dim_x = 'blockDim.x'
     self.block_dim_y = 'blockDim.y'
     self.block_dim_z = 'blockDim.z'
     self.stream_type = 'cudaStream_t'

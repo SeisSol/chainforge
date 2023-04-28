@@ -10,8 +10,8 @@ from .opt import OptimizationStage
 from .scopes import Scopes
 from .symbol import Symbol, SymbolType
 from .instructions import AbstractInstruction
-from .instructions import GetElementPtrBuilder, GemmBuilder
-from .instructions import ShrMemAllocBuilder, RegistersAllocBuilder
+from .instructions.builders.kernels import kernel_factory
+from .instructions.builders.kernels import KernelType
 from .writer import Writer
 from .thread_block_policies import AbstractThreadBlockPolicy, SimpleThreadBlockPolicy
 from .exceptions import GenerationError
@@ -23,9 +23,11 @@ class Generator:
   def __init__(self,
                gemm_list: List[GemmDescr],
                context: Context,
+               kernel_type: KernelType = KernelType.AUTO,
                thread_block_policy_type: Type[AbstractThreadBlockPolicy] = SimpleThreadBlockPolicy):
     self.gemm_list: List[GemmDescr] = gemm_list
     self._context: Context = context
+    self._kernel_type: KernelType = kernel_type
     self._thread_block_policy_type: Type[AbstractThreadBlockPolicy] = thread_block_policy_type
     self._base_kernel_name: Union[str, None] = None
 
@@ -39,7 +41,6 @@ class Generator:
     self._is_registerd: bool = False
 
     self._num_threads: int = 0
-    self._num_active_threads: int = 0
     self._accumulator_size: int = 0
 
     self._shr_mem_obj: Union[ShrMemObject, None] = None
@@ -64,8 +65,6 @@ class Generator:
     if not self._is_registerd:
       self.register()
 
-    self._deduce_num_threads()
-    self._deduce_accumulator_size()
     self._emit_ir()
     opt = OptimizationStage(context=self._context,
                             shr_mem=self._shr_mem_obj,
@@ -125,52 +124,17 @@ class Generator:
   def _generate_header(self):
     self._header = f'{self._generate_launcher_proto(with_defaults=True)};\n'
 
-  def _deduce_num_threads(self):
-    for gemm in self.gemm_list:
-      num_threads, num_active_threads = gemm.get_num_threads(self._context)
-
-      self._num_threads = max(num_threads, self._num_threads)
-      self._num_active_threads = max(num_active_threads, self._num_active_threads)
-
-  def _deduce_accumulator_size(self):
-    for gemm in self.gemm_list:
-      local_acc_size = gemm.get_accumulator_size()
-      self._accumulator_size = max(self._accumulator_size, local_acc_size)
-
   def _emit_ir(self):
-    # find local data from batches
-    builder = GetElementPtrBuilder(self._context, self._scopes)
-    self._scopes.add_scope()
-    for symbol in self._scopes.get_global_scope().values():
-      builder.build(symbol)
-      self._ir.extend(builder.get_instructions())
-
-    # allocate registers
-    builder = RegistersAllocBuilder(self._context, self._scopes)
-    builder.build(self._accumulator_size, 0.0)
-    self._register_array_obj = builder.get_resultant_obj()
-    self._ir.extend(builder.get_instructions())
-
-    # allocate shared memory
-    builder = ShrMemAllocBuilder(self._context, self._scopes)
-    builder.build(size=None)
-    self._shr_mem_obj = builder.get_resultant_obj()
-    self._ir.extend(builder.get_instructions())
-
-    self._scopes.add_scope()
-    # generate GEMM and store operations
-    builder = GemmBuilder(self._context,
-                          self._scopes,
-                          self._scopes.get_symbol(self._register_array_obj),
-                          self._scopes.get_symbol(self._shr_mem_obj),
-                          self._num_threads)
-
-    for gemm_descr in self.gemm_list:
-      builder.build(op1=self._scopes.get_symbol(gemm_descr.mat_a),
-                    op2=self._scopes.get_symbol(gemm_descr.mat_b),
-                    dest_obj=gemm_descr.mat_c,
-                    descr=gemm_descr)
-      self._ir.extend(builder.get_instructions())
+    builder = kernel_factory(self._context,
+                             self._scopes,
+                             self.gemm_list,
+                             self._kernel_type)
+    builder.build()
+    self._ir = builder.get_instructions()
+    self._num_threads = builder.get_num_threads()
+    self._accumulator_size = builder.get_accumulator_size()
+    self._register_array_obj = builder.get_reg_array_obj()
+    self._shr_mem_obj = builder.get_shr_mem_obj()
 
   def _deduce_mults_per_block(self):
     policy = self._thread_block_policy_type(self._context,

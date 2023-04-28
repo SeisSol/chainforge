@@ -46,21 +46,31 @@ class StoreRegToShr(AbstractShrMemWrite):
     view: DataView = self._dest.data_view
     self._shm_volume: int = view.rows * view.columns
 
+  def _gen_body(self, writer: Writer, thread_var, reg_var):
+    view = self._dest.data_view
+    writer.insert_pragma_unroll()
+    loop = f'for (int j = 0; j < {view.columns}; ++j)'
+    with writer.block(loop):
+      lhs = f'{self._dest.name}[{thread_var} + {view.lead_dim} * j]'
+      rhs = f'{self._src.name}[{reg_var}][j]'
+      writer(f'{lhs} = {rhs};')
+
   def gen_code(self, writer: Writer) -> None:
     writer.new_line()
-    writer(f' // writing to shr mem: from {self._src.name} to {self._dest.name}')
+    writer(f' // writing from reg. to shr. mem: from {self._src.name} to {self._dest.name}')
+
     lhs = f'{self._fp_as_str}* {self._vm.lexic.restrict_kw} {self._dest.name}'
     rhs = f'&{self._shr_mem.name}[{self._shr_mem_offset}]'
     writer(f'{lhs} = {rhs};')
 
-    view = self._dest.data_view
-    with writer.block(self.gen_mask_threads(view.rows)):
-      writer.insert_pragma_unroll()
-      loop = f'for (int i = 0; i < {view.columns}; ++i)'
-      with writer.block(loop):
-        rhs = f'{self._src.name}[i]'
-        lhs = f'{self._dest.name}[{self._vm.lexic.thread_idx_x} + {view.lead_dim} * i]'
-        writer(f'{lhs} = {rhs};')
+    lexic = self._vm.lexic
+    loop_header = f'int t = {lexic.thread_idx_x}, c = 0; '
+    loop_header += f't < {self._dest.data_view.rows}; '
+    loop_header += f't += {lexic.block_dim_x}, ++c'
+    with writer.block(f'for({loop_header})'):
+      self._gen_body(writer=writer,
+                     thread_var='t',
+                     reg_var='c')
 
   def get_dest(self) -> Symbol:
     return self._dest
@@ -106,25 +116,35 @@ class StoreRegToGlb(AbstractInstruction):
     self._num_threads: int = num_threads
     self._is_ready: bool = True
 
+  def _gen_body(self, writer: Writer, thread_var, reg_var):
+    dest_view = self._dest.data_view
+    src_view = self._src.data_view
+
+    writer.insert_pragma_unroll()
+    loop = f'for(int n = 0; n < {dest_view.columns}; ++n)'
+    with writer.block(loop):
+      lhs = f'{self._dest.name}[{thread_var} + {dest_view.lead_dim} * n]'
+
+      src_address = f'[{reg_var}][n]'
+      rhs = f'{self._alpha} * {self._src.name}{src_address}'
+
+      if self._beta != 0.0:
+        rhs += f' + {self._beta} * {lhs}'
+
+      writer(f'{lhs} = {rhs};')
+
   def gen_code(self, writer: Writer) -> None:
     writer.new_line()
-    dest_view = self._dest.data_view
+    writer(f' // writing from reg. to gdb. mem: from {self._src.name} to {self._dest.name}')
 
-    writer('// write results back to glb. memory')
-    with writer.block(self.gen_mask_threads(dest_view.rows)):
-
-      writer.insert_pragma_unroll()
-      loop = f'for(int n = 0; n < {dest_view.columns}; ++n)'
-      with writer.block(loop):
-        lhs = f'{self._dest.name}[{self._vm.lexic.thread_idx_x} + {dest_view.lead_dim} * n]'
-
-        src_address = '' if self._src.obj.size == 1 else '[n]'
-        rhs = f'{self._alpha} * {self._src.name}{src_address}'
-
-        if self._beta != 0.0:
-            rhs += f' + {self._beta} * {lhs}'
-
-        writer(f'{lhs} = {rhs};')
+    lexic = self._vm.lexic
+    loop_header = f'int t = {lexic.thread_idx_x}, c = 0; '
+    loop_header += f't < {self._dest.data_view.rows}; '
+    loop_header += f't += {lexic.block_dim_x}, ++c'
+    with writer.block(f'for({loop_header})'):
+      self._gen_body(writer=writer,
+                     thread_var='t',
+                     reg_var='c')
 
   def __str__(self) -> str:
     return f'{self._dest.name} = store_r2g {self._src.name};'

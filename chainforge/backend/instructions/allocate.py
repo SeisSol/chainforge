@@ -1,8 +1,9 @@
-from typing import Union
+from typing import Union, List
+from chainforge.common.basic_types import FloatingPointType
 from chainforge.common import Context
 from chainforge.backend.symbol import Symbol
-from chainforge.backend.exceptions import InternalError
 from chainforge.backend.writer import Writer
+from chainforge.backend.symbol import DataView
 from .abstract_instruction import AbstractInstruction
 
 
@@ -10,30 +11,37 @@ class RegisterAlloc(AbstractInstruction):
   def __init__(self,
                context: Context,
                dest: Symbol,
-               size: int,
+               size: List[int],
                init_value: Union[float, None]=None):
     super(RegisterAlloc, self).__init__(context)
-    self._size = size
     self._init_value = init_value
+
+    assert type(size) == list
+    self._size = size
     self._dest = dest
+    self._dest.data_view = DataView(rows=size[0],
+                                    columns=size[1],
+                                    lead_dim=size[0],
+                                    is_transposed=False)
     self._is_ready = True
     dest.add_user(self)
 
   def gen_code(self, writer: Writer):
-    if self._dest.obj.size < 1:
-      raise InternalError('size of reg. obj must be at least 1')
+    num_rows = self._dest.data_view.rows
+    num_columns = self._dest.data_view.columns
 
-    if self._dest.obj.size == 1:
-      init_value = ''
-      if isinstance(self._init_value, float):
-        init_value = f' = {self._init_value}'
-      result = f'{self._context.fp_as_str()} {self._dest.obj.name}{init_value};'
-    else:
-      init_values_list = ''
-      if isinstance(self._init_value, float):
-        init_values = ', '.join([str(self._init_value)] * self._dest.obj.size)
-        init_values_list = f' = {{{init_values}}}'
-      result = f'{self._context.fp_as_str()} {self._dest.obj.name}[{self._dest.obj.size}]{init_values_list};'
+    values = ''
+    if isinstance(self._init_value, float):
+      fp_prefix = 'f' if self._context.fp_type == FloatingPointType.FLOAT else ''
+      value = f'{self._init_value}{fp_prefix}'
+
+      column_values = ', '.join([value] * num_columns)
+      column_values = f'{{{column_values}}}'
+      values = ', '.join([column_values] * num_rows)
+      values = f' = {{{values}}}'
+
+    dims = f'[{num_rows}][{num_columns}]'
+    result = f'{self._context.fp_as_str()} {self._dest.obj.name}{dims}{values};'
     writer(result)
 
   def __str__(self) -> str:
