@@ -46,25 +46,28 @@ class Gemm(AbstractInstruction):
     writer.new_line()
     writer(f'// gemm: {self._op1.name} x {self._op2.name}')
 
-    op1_view = self._op1.data_view
-    num_full_cycles = int(op1_view.rows / self._num_threads)
-    tails_mask = op1_view.rows % self._num_threads
-
     gemm_variant = self.gen_code_without_prefetch
     if self._user_options.prefetch_gemm:
       if self._op1.stype == SymbolType.Global:
         gemm_variant = self.gen_code_with_prefetch
 
     lexic = self._vm.lexic
-    loop_header = f'int t = {lexic.thread_idx_x}, c = 0; '
-    loop_header += f't < {self._op1.data_view.rows}; '
-    loop_header += f't += {lexic.block_dim_x}, ++c'
-    with writer.block(f'for({loop_header})'):
+    reg_loop_var = 'c'
+    loop_init = f'int {reg_loop_var} = 0'
+    loop_condition = f'{reg_loop_var} < {self._dest.data_view.rows}'
+    loop_increment = f'++{reg_loop_var}'
+
+    with writer.block(f'for({loop_init}; {loop_condition}; {loop_increment})'):
+      thread_loop_var = 't'
+      writer(f'const int {thread_loop_var} = {lexic.thread_idx_x} + {reg_loop_var} * {lexic.block_dim_x};')
+      writer(f'if ({thread_loop_var} >= {self._op1.data_view.rows}) break;')
+      writer.new_line()
+
       gemm_variant(writer,
                    self._op1.data_view,
                    self._op2.data_view,
-                   thread_var='t',
-                   reg_var='c')
+                   thread_loop_var=thread_loop_var,
+                   reg_loop_var=reg_loop_var)
 
   def _gen_inner_loop(self,
                       writer,
@@ -73,7 +76,7 @@ class Gemm(AbstractInstruction):
                       n_range,
                       k,
                       lead_dim,
-                      reg_var):
+                      reg_loop_var):
     writer.insert_pragma_unroll()
     with writer.block(f'for (int n = 0; n < {n_range}; ++n)'):
       if is_requested_layout:
@@ -81,19 +84,19 @@ class Gemm(AbstractInstruction):
       else:
         address = f'n + {lead_dim} * {k}'
 
-      dest_address = f'[{reg_var}][n]'
+      dest_address = f'[{reg_loop_var}][n]'
       writer(f'{self._dest.name}{dest_address} += {op1_element} * {self._op2.name}[{address}];')
 
   def gen_code_without_prefetch(self,
                                 writer,
                                 view_op1,
                                 view_op2,
-                                thread_var,
-                                reg_var):
+                                thread_loop_var,
+                                reg_loop_var):
     k_range = view_op1.columns
     writer.insert_pragma_unroll()
     with writer.block(f'for (int k = 0; k < {k_range}; ++k)'):
-      address = f'{thread_var} + k * {view_op1.lead_dim}'
+      address = f'{thread_loop_var} + k * {view_op1.lead_dim}'
       writer(f'{self._fp_as_str} value = {self._op1.name}[{address}];')
 
       is_requested_layout = view_op2.is_transposed == self._trans_b
@@ -106,15 +109,15 @@ class Gemm(AbstractInstruction):
                            n_range=n_range,
                            k=f'k',
                            lead_dim=view_op2.lead_dim,
-                           reg_var=reg_var)
+                           reg_loop_var=reg_loop_var)
 
   def gen_code_with_prefetch(self,
                              writer,
                              view_op1,
                              view_op2,
-                             iteration_variable):
-    address = f'{self._vm.lexic.thread_idx_x}'
-    writer(f'{self._fp_as_str} prefetch = {self._op1.name}[{address}];')
+                             thread_loop_var,
+                             reg_loop_var):
+    writer(f'{self._fp_as_str} prefetch = {self._op1.name}[{thread_loop_var}];')
 
     if self._user_options.exact_contraction_length:
       k_range = view_op1.columns
@@ -124,7 +127,7 @@ class Gemm(AbstractInstruction):
     with writer.block(f'for (int k = 0; k < {k_range - 1}; ++k)'):
 
       writer(f'{self._fp_as_str} value = prefetch;')
-      address = f'{self._vm.lexic.thread_idx_x} + (k + 1) * {view_op1.lead_dim}'
+      address = f'{thread_loop_var} + (k + 1) * {view_op1.lead_dim}'
       writer(f'prefetch = {self._op1.name}[{address}];')
 
       is_requested_layout = view_op2.is_transposed == self._trans_b
@@ -137,7 +140,7 @@ class Gemm(AbstractInstruction):
                            n_range=n_range,
                            k=f'k',
                            lead_dim=view_op2.lead_dim,
-                           iteration_variable=iteration_variable)
+                           reg_loop_var=reg_loop_var)
     with writer.block():
       writer('// gemm tail i.e. last iteration')
       self._gen_inner_loop(writer,
@@ -146,7 +149,7 @@ class Gemm(AbstractInstruction):
                            n_range=n_range,
                            k=f'{k_range - 1}',
                            lead_dim=view_op2.lead_dim,
-                           iteration_variable=iteration_variable)
+                           reg_loop_var=reg_loop_var)
 
   def _check(self):
     view_op1 = self._op1.data_view

@@ -18,7 +18,7 @@ if (${BACKEND} STREQUAL "cuda")
           #-g;
           -lineinfo;
           -Xptxas -v;
-          -maxrregcount 90;
+          #-maxrregcount 90;
           -DREAL_SIZE=${REAL_SIZE})
 
   cuda_add_executable(${CMAKE_PROJECT_NAME} ./tmp/main.cu

@@ -46,13 +46,14 @@ class StoreRegToShr(AbstractShrMemWrite):
     view: DataView = self._dest.data_view
     self._shm_volume: int = view.rows * view.columns
 
-  def _gen_body(self, writer: Writer, thread_var, reg_var):
+  def _gen_body(self, writer: Writer, thread_loop_var, reg_loop_var):
     view = self._dest.data_view
+
     writer.insert_pragma_unroll()
     loop = f'for (int j = 0; j < {view.columns}; ++j)'
     with writer.block(loop):
-      lhs = f'{self._dest.name}[{thread_var} + {view.lead_dim} * j]'
-      rhs = f'{self._src.name}[{reg_var}][j]'
+      lhs = f'{self._dest.name}[{thread_loop_var} + {view.lead_dim} * j]'
+      rhs = f'{self._src.name}[{reg_loop_var}][j]'
       writer(f'{lhs} = {rhs};')
 
   def gen_code(self, writer: Writer) -> None:
@@ -64,13 +65,21 @@ class StoreRegToShr(AbstractShrMemWrite):
     writer(f'{lhs} = {rhs};')
 
     lexic = self._vm.lexic
-    loop_header = f'int t = {lexic.thread_idx_x}, c = 0; '
-    loop_header += f't < {self._dest.data_view.rows}; '
-    loop_header += f't += {lexic.block_dim_x}, ++c'
-    with writer.block(f'for({loop_header})'):
+    reg_loop_var = 'c'
+    loop_init = f'int {reg_loop_var} = 0'
+    loop_condition = f'{reg_loop_var} < {self._dest.data_view.rows}'
+    loop_increment = f'++{reg_loop_var}'
+
+    writer.insert_pragma_unroll()
+    with writer.block(f'for({loop_init}; {loop_condition}; {loop_increment})'):
+      thread_loop_var = 't'
+      writer(f'const int {thread_loop_var} = {lexic.thread_idx_x} + {reg_loop_var} * {lexic.block_dim_x};')
+      writer(f'if ({thread_loop_var} >= {self._dest.data_view.rows}) break;')
+      writer.new_line()
+
       self._gen_body(writer=writer,
-                     thread_var='t',
-                     reg_var='c')
+                     thread_loop_var=thread_loop_var,
+                     reg_loop_var=reg_loop_var)
 
   def get_dest(self) -> Symbol:
     return self._dest
@@ -116,16 +125,16 @@ class StoreRegToGlb(AbstractInstruction):
     self._num_threads: int = num_threads
     self._is_ready: bool = True
 
-  def _gen_body(self, writer: Writer, thread_var, reg_var):
+  def _gen_body(self, writer: Writer, thread_loop_var, reg_loop_var):
     dest_view = self._dest.data_view
     src_view = self._src.data_view
 
     writer.insert_pragma_unroll()
     loop = f'for(int n = 0; n < {dest_view.columns}; ++n)'
     with writer.block(loop):
-      lhs = f'{self._dest.name}[{thread_var} + {dest_view.lead_dim} * n]'
+      lhs = f'{self._dest.name}[{thread_loop_var} + {dest_view.lead_dim} * n]'
 
-      src_address = f'[{reg_var}][n]'
+      src_address = f'[{reg_loop_var}][n]'
       rhs = f'{self._alpha} * {self._src.name}{src_address}'
 
       if self._beta != 0.0:
@@ -138,13 +147,21 @@ class StoreRegToGlb(AbstractInstruction):
     writer(f' // writing from reg. to gdb. mem: from {self._src.name} to {self._dest.name}')
 
     lexic = self._vm.lexic
-    loop_header = f'int t = {lexic.thread_idx_x}, c = 0; '
-    loop_header += f't < {self._dest.data_view.rows}; '
-    loop_header += f't += {lexic.block_dim_x}, ++c'
-    with writer.block(f'for({loop_header})'):
+    reg_loop_var = 'c'
+    loop_init = f'int {reg_loop_var} = 0'
+    loop_condition = f'{reg_loop_var} < {self._src.data_view.rows}'
+    loop_increment = f'++{reg_loop_var}'
+
+    writer.insert_pragma_unroll()
+    with writer.block(f'for({loop_init}; {loop_condition}; {loop_increment})'):
+      thread_loop_var = 't'
+      writer(f'const int {thread_loop_var} = {lexic.thread_idx_x} + {reg_loop_var} * {lexic.block_dim_x};')
+      writer(f'if ({thread_loop_var} >= {self._dest.data_view.rows}) break;')
+      writer.new_line()
+
       self._gen_body(writer=writer,
-                     thread_var='t',
-                     reg_var='c')
+                     thread_loop_var=thread_loop_var,
+                     reg_loop_var=reg_loop_var)
 
   def __str__(self) -> str:
     return f'{self._dest.name} = store_r2g {self._src.name};'

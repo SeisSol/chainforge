@@ -22,6 +22,8 @@ class ClearRegisters(AbstractInstruction):
   def gen_code(self, writer: Writer):
     writer.new_line()
     writer(f'// clear registers')
+
+    writer.insert_pragma_unroll()
     with writer.block(f'for (int i = 0; i < {self._src.data_view.rows}; ++i)'):
       writer.insert_pragma_unroll()
       with writer.block(f'for (int j = 0; j < {self._src.data_view.columns}; ++j)'):
