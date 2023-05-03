@@ -32,6 +32,11 @@ class AbstractShrMemLoader(AbstractShrMemWrite):
     self._shr_mem.add_user(self)
     self._is_ready: bool = False
 
+  def unregister(self):
+    self._src.remove_user(self)
+    self._dest.remove_user(self)
+    self._shr_mem.remove_user(self)
+
   def gen_code(self, writer) -> None:
     writer.new_line()
     lhs = f'{self._fp_as_str}* {self._vm.lexic.restrict_kw} {self._dest.name}'

@@ -41,5 +41,11 @@ class Symbol:
   def get_fist_user(self):
     return self._users[0]
 
+  def pop_user(self, user_index):
+    self._users.pop(user_index)
+
+  def remove_user(self, user):
+    self._users.remove(user)
+
   def __str__(self):
     return f'name: {self.name}, type: {self.stype}'

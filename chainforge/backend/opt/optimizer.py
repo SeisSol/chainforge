@@ -8,6 +8,7 @@ from .mem_region_allocation import MemoryRegionAllocation, Region
 from .shr_mem_analyzer import ShrMemOpt
 from .sync_threads import SyncThreadsOpt
 from .remove_redundancy import RemoveRedundancyOpt
+from .data_dependency_opt import DataDependencyOpt
 
 
 class OptimizationStage:
@@ -46,6 +47,11 @@ class OptimizationStage:
     opt = RemoveRedundancyOpt(self._context, self._instrs)
     opt.apply()
     self._instrs = opt.get_instructions()
+
+    if self._user_options.opt_data_dependency:
+      opt = DataDependencyOpt(self._context, self._instrs, self._num_threads)
+      opt.apply()
+      self._instrs = opt.get_instructions()
 
   def get_instructions(self):
     return self._instrs

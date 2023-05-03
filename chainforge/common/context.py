@@ -9,12 +9,14 @@ class Options:
                prefetch_gemm=False,
                align_shr_mem=True,
                enable_sync_threads_opt=True,
-               unroll_factor=8):
+               unroll_factor=8,
+               opt_data_dependency=True):
     self.exact_contraction_length: bool = exact_contraction_length
     self.prefetch_gemm: bool = prefetch_gemm
     self.align_shr_mem: bool = align_shr_mem
     self.enable_sync_threads_opt = enable_sync_threads_opt
     self.unroll_factor = unroll_factor
+    self.opt_data_dependency = opt_data_dependency
 
 
 class Context:

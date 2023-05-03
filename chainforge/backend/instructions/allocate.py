@@ -18,13 +18,17 @@ class RegisterAlloc(AbstractInstruction):
 
     assert type(size) == list
     self._size = size
+
+    dest.add_user(self)
     self._dest = dest
     self._dest.data_view = DataView(rows=size[0],
                                     columns=size[1],
                                     lead_dim=size[0],
                                     is_transposed=False)
     self._is_ready = True
-    dest.add_user(self)
+
+  def unregister(self):
+    self._dest.remove_user(self)
 
   def gen_code(self, writer: Writer):
     num_rows = self._dest.data_view.rows
@@ -55,9 +59,12 @@ class ShrMemAlloc(AbstractInstruction):
                size: Union[int, None]):
     super(ShrMemAlloc, self).__init__(context)
     self._size = size
-    self._dest = dest
 
     dest.add_user(self)
+    self._dest = dest
+
+  def unregister(self):
+    self._dest.remove_user(self)
 
   def gen_code(self, writer: Writer):
     shrmem_obj = self._dest.obj

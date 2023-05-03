@@ -9,6 +9,9 @@ class SyncThreads(AbstractInstruction):
     self._num_threads = num_threads_per_mult
     self._is_ready = True
 
+  def unregister(self):
+    pass
+
   def gen_code(self, writer: Writer):
     writer(f'{self.__str__()}')
 

@@ -47,6 +47,10 @@ class StoreRegToShr(AbstractShrMemWrite):
     view: DataView = self._dest.data_view
     self._shm_volume: int = view.rows * view.columns
 
+  def unregister(self):
+    self._dest.remove_user(self)
+    self._src.remove_user(self)
+
   def _gen_body(self, writer: Writer, thread_loop_var, reg_loop_var):
     view = self._dest.data_view
 
@@ -128,6 +132,28 @@ class StoreRegToGlb(AbstractInstruction):
     self._num_threads: int = num_threads
     self._is_ready: bool = True
 
+  def get_src(self):
+    return self._src
+
+  def get_dest(self):
+    return self._dest
+
+  def get_alpha(self):
+    return self._alpha
+
+  def get_beta(self):
+    return self._beta
+
+  def set_alpha(self, alpha):
+    self._alpha = alpha
+
+  def set_beta(self, beta):
+    self._beta = beta
+
+  def unregister(self):
+    self._src.remove_user(self)
+    self._dest.remove_user(self)
+
   def _gen_body(self, writer: Writer, thread_loop_var, reg_loop_var):
     dest_view = self._dest.data_view
     src_view = self._src.data_view
@@ -170,3 +196,75 @@ class StoreRegToGlb(AbstractInstruction):
 
   def __str__(self) -> str:
     return f'{self._dest.name} = store_r2g {self._src.name};'
+
+
+class StoreGlbToReg(AbstractInstruction):
+  def __init__(self,
+               context: Context,
+               src: Symbol,
+               dest: Symbol,
+               beta: float,
+               num_threads: int):
+    super(StoreGlbToReg, self).__init__(context)
+
+    if dest.stype != SymbolType.Register:
+      raise InternalError('store: operand `dest` is not in reg mem')
+
+    if not isinstance(dest.obj, RegMemObject):
+      raise InternalError(f'store: operand `dest` is registers, instead: {type(src.obj)}')
+
+    if src.stype != SymbolType.Global:
+      raise InternalError('store: operand `src` is not in global memory.')
+
+    if not isinstance(src.obj, Matrix):
+      raise InternalError('store: operand `src` is not a matrix')
+
+    src.add_user(self)
+    dest.add_user(self)
+
+    self._dest: Symbol = dest
+    self._src: Symbol = src
+    self._beta = beta
+    self._num_threads: int = num_threads
+    self._is_ready: bool = True
+
+  def unregister(self):
+    self._dest.remove_user(self)
+    self._src.remove_user(self)
+
+  def _gen_body(self, writer: Writer, thread_loop_var, reg_loop_var):
+    dest_view = self._dest.data_view
+    src_view = self._src.data_view
+
+    writer.insert_pragma_unroll()
+    loop = f'for(int n = 0; n < {dest_view.columns}; ++n)'
+    with writer.block(loop):
+      lhs = f'{self._dest.name}[{reg_loop_var}][n]'
+      rhs = f'{self._beta} * {self._src.name}[{thread_loop_var} + {src_view.lead_dim} * n]'
+      writer(f'{lhs} = {rhs};')
+
+  def gen_code(self, writer: Writer) -> None:
+    writer.new_line()
+    writer(f' // writing from glb. to reg. mem: from {self._src.name} to {self._dest.name}')
+
+    lexic = self._vm.lexic
+    num_cycles = math.ceil(self._src.data_view.rows / self._num_threads)
+
+    reg_loop_var = 'c'
+    loop_init = f'int {reg_loop_var} = 0'
+    loop_condition = f'{reg_loop_var} < {num_cycles}'
+    loop_increment = f'++{reg_loop_var}'
+
+    writer.insert_pragma_unroll()
+    with writer.block(f'for({loop_init}; {loop_condition}; {loop_increment})'):
+      thread_loop_var = 't'
+      writer(f'const int {thread_loop_var} = {lexic.thread_idx_x} + {reg_loop_var} * {lexic.block_dim_x};')
+      writer(f'if ({thread_loop_var} >= {self._src.data_view.rows}) break;')
+      writer.new_line()
+
+      self._gen_body(writer=writer,
+                     thread_loop_var=thread_loop_var,
+                     reg_loop_var=reg_loop_var)
+
+  def __str__(self) -> str:
+    return f'{self._dest.name} = store_g2r {self._src.name};'

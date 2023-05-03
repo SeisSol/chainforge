@@ -15,6 +15,10 @@ class AbstractInstruction(ABC):
     self._is_ready = False
 
   @abstractmethod
+  def unregister(self):
+    pass
+
+  @abstractmethod
   def gen_code(self, writer: Writer) -> None:
     return None
 

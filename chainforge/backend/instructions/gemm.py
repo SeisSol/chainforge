@@ -38,9 +38,14 @@ class Gemm(AbstractInstruction):
     if not isinstance(self._op2.obj, Matrix):
       raise InternalError('gemm: op2 is not a matrix')
 
-    op1.add_user(self)
-    op2.add_user(self)
-    dest.add_user(self)
+    self._op1.add_user(self)
+    self._op2.add_user(self)
+    self._dest.add_user(self)
+
+  def unregister(self):
+    self._op1.remove_user(self)
+    self._op2.remove_user(self)
+    self._dest.remove_user(self)
 
   def gen_code(self, writer: Writer):
     self._check()

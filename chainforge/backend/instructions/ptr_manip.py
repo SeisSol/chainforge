@@ -33,12 +33,16 @@ class GetElementPtr(AbstractInstruction):
                               lead_dim=src.obj.num_rows,
                               is_transposed=False)
 
+    src.add_user(self)
+    dest.add_user(self)
+
     self._dest = dest
     self._src = src
     self._is_ready = True
 
-    src.add_user(self)
-    dest.add_user(self)
+  def unregister(self):
+    self._src.remove_user(self)
+    self._dest.remove_user(self)
 
   def gen_code(self, writer: Writer):
     extra_offset = get_extra_offset_name(self._src)

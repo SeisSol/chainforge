@@ -16,8 +16,14 @@ class ClearRegisters(AbstractInstruction):
       raise InternalError('ptr: operand `src` is not in registers')
 
     self._is_ready = True
-    self._src = src
     src.add_user(self)
+    self._src = src
+
+  def unregister(self):
+    self._src.remove_user(self)
+
+  def get_src(self):
+    return self._src
 
   def gen_code(self, writer: Writer):
     writer.new_line()
