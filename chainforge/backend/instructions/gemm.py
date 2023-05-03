@@ -97,7 +97,13 @@ class Gemm(AbstractInstruction):
                                 thread_loop_var,
                                 reg_loop_var):
     k_range = view_op1.columns
-    writer.insert_pragma_unroll()
+
+    user_options = self._context.get_user_options()
+    unroll_factor = user_options.unroll_factor
+    if (k_range / unroll_factor) <= 2:
+      unroll_factor = None
+
+    writer.insert_pragma_unroll(unroll_factor)
     with writer.block(f'for (int k = 0; k < {k_range}; ++k)'):
       address = f'{thread_loop_var} + k * {view_op1.lead_dim}'
       writer(f'{self._fp_as_str} value = {self._op1.name}[{address}];')

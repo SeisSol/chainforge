@@ -47,8 +47,11 @@ class Writer:
   def new_line(self):
     self.__call__('')
 
-  def insert_pragma_unroll(self):
-    self.__call__(f'#pragma unroll')
+  def insert_pragma_unroll(self, num=None):
+    if num:
+      self.__call__(f'#pragma unroll {num}')
+    else:
+      self.__call__(f'#pragma unroll')
 
   def get_src(self):
     return self.stream.getvalue()
