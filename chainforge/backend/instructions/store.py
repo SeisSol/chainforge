@@ -6,6 +6,7 @@ from chainforge.backend.symbol import Symbol, SymbolType, DataView
 from chainforge.backend.exceptions import InternalError
 from chainforge.backend.writer import Writer
 from .abstract_instruction import AbstractInstruction, AbstractShrMemWrite
+import math
 
 
 class StoreRegToShr(AbstractShrMemWrite):
@@ -65,9 +66,11 @@ class StoreRegToShr(AbstractShrMemWrite):
     writer(f'{lhs} = {rhs};')
 
     lexic = self._vm.lexic
+    num_cycles = math.ceil(self._dest.data_view.rows / self._num_threads)
+
     reg_loop_var = 'c'
     loop_init = f'int {reg_loop_var} = 0'
-    loop_condition = f'{reg_loop_var} < {self._dest.data_view.rows}'
+    loop_condition = f'{reg_loop_var} < {num_cycles}'
     loop_increment = f'++{reg_loop_var}'
 
     writer.insert_pragma_unroll()
@@ -147,9 +150,11 @@ class StoreRegToGlb(AbstractInstruction):
     writer(f' // writing from reg. to gdb. mem: from {self._src.name} to {self._dest.name}')
 
     lexic = self._vm.lexic
+    num_cycles = math.ceil(self._dest.data_view.rows / self._num_threads)
+
     reg_loop_var = 'c'
     loop_init = f'int {reg_loop_var} = 0'
-    loop_condition = f'{reg_loop_var} < {self._src.data_view.rows}'
+    loop_condition = f'{reg_loop_var} < {num_cycles}'
     loop_increment = f'++{reg_loop_var}'
 
     writer.insert_pragma_unroll()

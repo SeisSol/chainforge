@@ -1,2 +1,2 @@
 from .factory import kernel_factory
-from .factory import KernelType
+from .kernel_types import KernelType

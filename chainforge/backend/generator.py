@@ -135,9 +135,11 @@ class Generator:
     self._accumulator_size = builder.get_accumulator_size()
     self._register_array_obj = builder.get_reg_array_obj()
     self._shr_mem_obj = builder.get_shr_mem_obj()
+    self._kernel_type = builder.get_selected_kernel_type()
 
   def _deduce_mults_per_block(self):
     policy = self._thread_block_policy_type(self._context,
+                                            self._kernel_type,
                                             self._shr_mem_obj.get_size_per_mult(),
                                             self._num_threads)
     num_mults_per_block = policy.get_num_mults_per_block()

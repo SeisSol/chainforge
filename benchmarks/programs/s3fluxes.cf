@@ -1,0 +1,9 @@
+Am = {rows: 64, cols: 9, addr: strided, bbox: [0, 0, 64, 9]};
+Bm = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+Cm = {rows: 32, cols: 56, addr: none, bbox: [0, 0, 32, 56]};
+Dm = {rows: 32, cols: 21, addr: none, bbox: [0, 0, 32, 21]};
+Em = {rows: 64, cols: 21, addr: none, bbox: [0, 0, 64, 21]};
+Fm = {rows: 64, cols: 9, addr: strided, bbox: [0, 0, 64, 9]};
+
+Fm = Em*(Cm*(Am*Bm)) + Fm -> local_flux;
+Fm = Em*(Dm*(Cm*(Am*Bm))) + Fm -> neigb_flux;

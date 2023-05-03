@@ -4,6 +4,7 @@ from chainforge.backend.symbol import Symbol, SymbolType
 from chainforge.backend.exceptions import InternalError, GenerationError
 from chainforge.backend.writer import Writer
 from .abstract_instruction import AbstractInstruction
+import math
 
 
 class Gemm(AbstractInstruction):
@@ -52,9 +53,11 @@ class Gemm(AbstractInstruction):
         gemm_variant = self.gen_code_with_prefetch
 
     lexic = self._vm.lexic
+    num_cycles = math.ceil(self._op1.data_view.rows / self._num_threads)
+
     reg_loop_var = 'c'
     loop_init = f'int {reg_loop_var} = 0'
-    loop_condition = f'{reg_loop_var} < {self._dest.data_view.rows}'
+    loop_condition = f'{reg_loop_var} < {num_cycles}'
     loop_increment = f'++{reg_loop_var}'
 
     with writer.block(f'for({loop_init}; {loop_condition}; {loop_increment})'):

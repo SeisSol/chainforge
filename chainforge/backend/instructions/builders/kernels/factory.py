@@ -1,14 +1,8 @@
 from .default_kernel import DefaultKernelBuilder
 from .single_warp_kernel import SingleWarpKernelBuilder
+from .kernel_types import KernelType
 from chainforge.common import Context
 from chainforge.backend.scopes import Scopes
-from enum import Enum
-
-
-class KernelType(Enum):
-  AUTO = 0
-  DEFAULT = 1
-  MIN_THREADS = 2
 
 
 def kernel_factory(context: Context,
@@ -19,7 +13,7 @@ def kernel_factory(context: Context,
     return DefaultKernelBuilder(context, scopes, gemm_list)
   elif kernel_type == KernelType.DEFAULT:
     return DefaultKernelBuilder(context, scopes, gemm_list)
-  elif kernel_type == KernelType.MIN_THREADS:
+  elif kernel_type == KernelType.SINGLE_WARP:
     return SingleWarpKernelBuilder(context, scopes, gemm_list)
   else:
     raise RuntimeError('unknown kernel type')

@@ -1,4 +1,5 @@
 from .default_kernel import DefaultKernelBuilder
+from .kernel_types import KernelType
 from chainforge.backend.instructions import RegistersAllocBuilder
 from chainforge.backend.instructions import ShrMemAllocBuilder
 from chainforge.backend.instructions import GemmBuilder
@@ -13,6 +14,9 @@ class SingleWarpKernelBuilder(DefaultKernelBuilder):
 
   def __init__(self, context: Context, scopes: Scopes, gemm_list):
     super(SingleWarpKernelBuilder, self).__init__(context, scopes, gemm_list)
+
+  def get_selected_kernel_type(self):
+    return KernelType.SINGLE_WARP
 
   def _build_kernel(self):
     # allocate registers

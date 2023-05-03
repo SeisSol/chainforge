@@ -53,6 +53,10 @@ class BaseKernelBuilder(AbstractBuilder):
   def _build_kernel(self):
     pass
 
+  @abstractmethod
+  def get_selected_kernel_type(self):
+    pass
+
   def build(self):
     self._build_prologue()
     self._build_kernel()

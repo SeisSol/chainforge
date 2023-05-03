@@ -1,4 +1,5 @@
 from .base_kernel import BaseKernelBuilder
+from .kernel_types import KernelType
 from chainforge.backend.instructions import RegistersAllocBuilder
 from chainforge.backend.instructions import ShrMemAllocBuilder
 from chainforge.backend.instructions import GemmBuilder
@@ -12,6 +13,9 @@ class DefaultKernelBuilder(BaseKernelBuilder):
 
   def __init__(self, context: Context, scopes: Scopes, gemm_list):
     super(DefaultKernelBuilder, self).__init__(context, scopes, gemm_list)
+
+  def get_selected_kernel_type(self):
+    return KernelType.DEFAULT
 
   def _build_kernel(self):
     # allocate registers
