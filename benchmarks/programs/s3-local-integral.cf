@@ -1,0 +1,8 @@
+i_surf = {rows: 64, cols: 9, addr: strided, bbox: [0, 0, 56, 9]};
+r_div_m = {rows: 64, cols: 32, addr: none, bbox: [0, 0, 56, 21]};
+f_mr_t = {rows: 32, cols: 64, addr: none, bbox: [0, 0, 21, 56]};
+d_k = {rows: 64, cols: 9, addr: strided, bbox: [0, 0, 56, 9]};
+a_plus = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+
+i_surf = i_surf + (r_div_m * ((f_mr_t * d_k) * a_plus)) -> orig_ordering;
+i_surf = i_surf + (r_div_m * (f_mr_t * (d_k * a_plus))) -> mod_ordering;

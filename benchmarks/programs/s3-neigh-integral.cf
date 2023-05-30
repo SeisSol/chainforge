@@ -1,0 +1,10 @@
+dofs = {rows: 64, cols: 9, addr: strided, bbox: [0, 0, 56, 9]};
+r_div_mat = {rows: 64, cols: 21, addr: none, bbox: [0, 0, 56, 21]};
+f_plus = {rows: 32, cols: 21, addr: none, bbox: [0, 0, 21, 21]};
+r_mat = {rows: 32, cols: 56, addr: none, bbox: [0, 0, 21, 56]};
+i_dofs = {rows: 64, cols: 9, addr: strided, bbox: [0, 0, 56, 9]};
+a_plus = {rows: 9, cols: 9, addr: strided, bbox: [0, 0, 9, 9]};
+
+dofs = dofs + r_div_mat * ((f_plus * (r_mat * i_dofs)) * a_plus) -> orig_ordering;
+dofs = dofs + r_div_mat * (f_plus * (r_mat * (i_dofs * a_plus))) -> mod_ordering;
+
