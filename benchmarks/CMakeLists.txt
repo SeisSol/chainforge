@@ -40,16 +40,20 @@ elseif(${BACKEND} STREQUAL "hip")
   set(CMAKE_MODULE_PATH "${HIP_PATH}/cmake" ${CMAKE_MODULE_PATH})
 
   set(GPU_TARGETS ${ARCH})
-  find_package(hip REQUIRED)
-  add_executable(${CMAKE_PROJECT_NAME} ./tmp/main.cpp
-                                       ./tmp/kernel.cpp
-                                       ./common/aux.cpp
-                                       ./common/gemm.cpp
-                                       ../chainforge/include/chainforge_aux.hip.cpp)
+  find_package(HIP REQUIRED)
+  set(DEVICE_SRC ./tmp/main.cpp
+                 ./tmp/kernel.cpp
+                 ./common/aux.cpp
+                 ./common/gemm.cpp
+                 ../chainforge/include/chainforge_aux.hip.cpp)
 
-  target_link_libraries(${CMAKE_PROJECT_NAME} hip::device)
+  set_source_files_properties(${DEVICE_SRC} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
+  set(_HIPCC --offload-arch=${ARCH}; -std=c++14; -O3)
+
+  hip_add_executable(${CMAKE_PROJECT_NAME} ${DEVICE_SRC} HIPCC_OPTIONS ${_HIPCC})
+  target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE ${HIP_PATH}/lib/libamdhip64.so)
   target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE HIP_UNDERHOOD)
-  target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -std=c++14 -O3)
+  set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY HIP_ARCHITECTURES ${ARCH})
 else()
   message(FATAL_ERROR "unknown backend provided: ${BACKEND}")
 endif()
