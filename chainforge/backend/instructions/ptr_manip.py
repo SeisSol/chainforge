@@ -28,10 +28,10 @@ class GetElementPtr(AbstractInstruction):
     if not isinstance(dest.obj, Matrix):
       raise InternalError('ptr: operand `dest` is not a matrix')
 
-    dest.data_view = DataView(rows=src.obj.get_actual_num_rows(),
-                              columns=src.obj.get_actual_num_cols(),
-                              lead_dim=src.obj.num_rows,
-                              is_transposed=False)
+    dest.data_view = DataView(rows=src.obj.num_rows,
+                              columns=src.obj.num_cols,
+                              is_transposed=False,
+                              bbox=src.obj.get_bbox())
 
     self._dest = dest
     self._src = src
@@ -46,15 +46,12 @@ class GetElementPtr(AbstractInstruction):
     matrix = self._src.obj
     address = ''
     if matrix.addressing == Addressing.STRIDED:
-      main_offset = f'({batch_id}) * {matrix.get_real_volume()}'
-      sub_offset = f'{matrix.get_offset_to_first_element()}'
-      address = f'{main_offset} + {sub_offset} + {extra_offset}'
+      offset = f'({batch_id}) * {matrix.get_real_volume()}'
+      address = f'{offset} + {extra_offset}'
     elif matrix.addressing == Addressing.PTR_BASED:
-      main_offset = f'{batch_id}'
-      sub_offset = f'{matrix.get_offset_to_first_element()}'
-      address = f'{main_offset}][{sub_offset} + {extra_offset}'
+      address = f'{batch_id}][{extra_offset}'
     elif matrix.addressing == Addressing.NONE:
-      address = f'{matrix.get_offset_to_first_element()}'
+      address = f'0'
     else:
       GenerationError(f'unknown addressing of `src` operand, given {matrix.addressing}')
 

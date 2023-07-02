@@ -6,6 +6,7 @@ from chainforge.backend.symbol import Symbol, SymbolType, DataView
 from chainforge.backend.exceptions import InternalError
 from chainforge.backend.writer import Writer
 from .abstract_instruction import AbstractInstruction, AbstractShrMemWrite
+from copy import deepcopy
 
 
 class StoreRegToShr(AbstractShrMemWrite):
@@ -33,18 +34,22 @@ class StoreRegToShr(AbstractShrMemWrite):
     dest.add_user(self)
     shr_mem.add_user(self)
 
-    dest.data_view = DataView(rows=dest.obj.get_actual_num_rows(),
-                              columns=dest.obj.get_actual_num_cols(),
-                              lead_dim=dest.obj.num_rows,
-                              is_transposed=False)
+    bbox = dest.obj.get_bbox()
+    bbox = [0, 0, bbox[2] - bbox[0], bbox[3] - bbox[1]]
+    num_rows = context.align(bbox[2] - bbox[0])
+    num_cols = dest.obj.get_actual_num_cols()
+    dest.data_view = DataView(rows=num_rows,
+                              columns=num_cols,
+                              is_transposed=False,
+                              bbox=bbox)
 
     self._dest: Symbol = dest
-    self._src: Symbol = src
+    self._src: Symbol = deepcopy(src)
     self._shr_mem: Symbol = shr_mem
     self._num_threads: int = num_threads
     self._shr_mem_offset: Union[int, None] = None
     view: DataView = self._dest.data_view
-    self._shm_volume: int = view.rows * view.columns
+    self._shm_volume: int = view.get_volume()
 
   def gen_code(self, writer: Writer) -> None:
     writer.new_line()
@@ -53,13 +58,22 @@ class StoreRegToShr(AbstractShrMemWrite):
     rhs = f'&{self._shr_mem.name}[{self._shr_mem_offset}]'
     writer(f'{lhs} = {rhs};')
 
-    view = self._dest.data_view
-    with writer.block(self.gen_mask_threads(view.rows)):
+    dest_view = self._dest.data_view
+    src_bbox = self._src.data_view.get_bbox()
+
+    with writer.block(self.gen_range_mask_threads(begin=src_bbox[0], end=src_bbox[2])):
       writer.insert_pragma_unroll()
-      loop = f'for (int i = 0; i < {view.columns}; ++i)'
+      loop = f'for (int i = 0; i < {dest_view.get_dim_size(1)}; ++i)'
       with writer.block(loop):
+        dest_row_idx = f'{self._vm.lexic.thread_idx_x}'
+        thread_id_displacement = self._src.data_view.get_offset()
+        if thread_id_displacement:
+          dest_row_idx += f' - {thread_id_displacement}'
+
+        dest_addr = dest_view.get_address(row_idx=dest_row_idx, column_idx='i')
+        lhs = f'{self._dest.name}[{dest_addr}]'
+
         rhs = f'{self._src.name}[i]'
-        lhs = f'{self._dest.name}[{self._vm.lexic.thread_idx_x} + {view.lead_dim} * i]'
         writer(f'{lhs} = {rhs};')
 
   def get_dest(self) -> Symbol:
@@ -91,16 +105,19 @@ class StoreRegToGlb(AbstractInstruction):
     if not isinstance(dest.obj, Matrix):
       raise InternalError('store: operand `dest` is not a matrix')
 
+    if dest.data_view.get_dim_size(0) != src.data_view.get_dim_size(0):
+      raise InternalError('store: `src` and `dest` do not match in size aling dim `0`')
+
     src.add_user(self)
     dest.add_user(self)
 
-    dest.data_view = DataView(rows=dest.obj.get_actual_num_rows(),
-                              columns=dest.obj.get_actual_num_cols(),
-                              lead_dim=dest.obj.num_rows,
-                              is_transposed=False)
+    dest.data_view = DataView(rows=dest.obj.num_rows,
+                              columns=dest.obj.num_cols,
+                              is_transposed=False,
+                              bbox=dest.obj.get_bbox())
 
     self._dest: Symbol = dest
-    self._src: Symbol = src
+    self._src: Symbol = deepcopy(src)
     self._alpha = alpha
     self._beta = beta
     self._num_threads: int = num_threads
@@ -111,12 +128,19 @@ class StoreRegToGlb(AbstractInstruction):
     dest_view = self._dest.data_view
 
     writer('// write results back to glb. memory')
-    with writer.block(self.gen_mask_threads(dest_view.rows)):
+    src_bbox = self._src.data_view.get_bbox()
+    with writer.block(self.gen_range_mask_threads(begin=src_bbox[0], end=src_bbox[2])):
 
       writer.insert_pragma_unroll()
-      loop = f'for(int n = 0; n < {dest_view.columns}; ++n)'
+      loop = f'for(int n = 0; n < {dest_view.get_dim_size(1)}; ++n)'
       with writer.block(loop):
-        lhs = f'{self._dest.name}[{self._vm.lexic.thread_idx_x} + {dest_view.lead_dim} * n]'
+        dest_row_idx = f'{self._vm.lexic.thread_idx_x}'
+        thread_id_displacement = self._src.data_view.get_offset()
+        if thread_id_displacement:
+          dest_row_idx += f' - {thread_id_displacement}'
+
+        dest_addr = dest_view.get_address(row_idx=dest_row_idx, column_idx='n')
+        lhs = f'{self._dest.name}[{dest_addr}]'
 
         src_address = '' if self._src.obj.size == 1 else '[n]'
         rhs = f'{self._alpha} * {self._src.name}{src_address}'

@@ -6,11 +6,9 @@ from chainforge.common.basic_types import FloatingPointType
 class Options:
   def __init__(self,
                exact_contraction_length=False,
-               prefetch_gemm=False,
                align_shr_mem=True,
                enable_sync_threads_opt=True):
     self.exact_contraction_length: bool = exact_contraction_length
-    self.prefetch_gemm: bool = prefetch_gemm
     self.align_shr_mem: bool = align_shr_mem
     self.enable_sync_threads_opt = enable_sync_threads_opt
 
@@ -44,3 +42,13 @@ class Context:
 
     align_length = (vec_unit_length * hw_fp_word_size) / fp_size
     return int(ceil(num / align_length) * align_length)
+
+  def align_range(self, begin, end):
+    assert end > begin
+    fp_size = 4 if self.fp_type == FloatingPointType.FLOAT else 8
+    mem_access_align_size = self._vm.hw_descr.mem_access_align_size
+    align_factor =  mem_access_align_size / fp_size
+
+    aligned_begin = begin - begin % align_factor
+    aligned_end = end + (align_factor - end % align_factor) % align_factor
+    return int(aligned_begin), int(aligned_end)

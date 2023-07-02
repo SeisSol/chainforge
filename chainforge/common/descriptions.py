@@ -12,7 +12,8 @@ class GemmDescr:
                c,
                alpha=1.0,
                beta=0.0,
-               strict_match: bool = False):
+               strict_match: bool = False,
+               prefer_align: bool = False):
     self.trans_a = trans_a
     self.trans_b = trans_b
     self.mat_a = a
@@ -31,6 +32,7 @@ class GemmDescr:
     self._n = None
     self._k = None
     self._strict_match = strict_match
+    self.prefer_align = prefer_align
 
     self._check()
     self._analyze()

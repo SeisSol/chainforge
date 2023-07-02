@@ -63,6 +63,9 @@ class Matrix():
   def get_offset_to_first_element(self):
     return self.num_rows * self.bbox[1] + self.bbox[0]
 
+  def get_bbox(self):
+    return self.bbox
+
   def _set_name(self, name):
     self.name = name
 

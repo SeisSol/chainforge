@@ -132,7 +132,8 @@ class GemmBuilder(AbstractBuilder):
                                    trans_b=self._descr.trans_b,
                                    op1=self._mem_region_a,
                                    op2=self._mem_region_b,
-                                   dest=self._dest_regs))
+                                   dest=self._dest_regs,
+                                   prefer_align=self._descr.prefer_align))
 
   def _make_store(self):
     if self._dest_obj in self._scopes:
