@@ -85,6 +85,12 @@ class Generator:
     with writer.block(f'{proto}'):
       self._write_kernel_meta_data(writer)
 
+      vm = self._context.get_vm()
+      mapped_keywords = vm.lexic.get_mapped_keywords()
+      for kw in mapped_keywords:
+        mapped_kw, real_kw, type = kw
+        writer(f'const {type} {mapped_kw} = {real_kw};')
+
       writer(f'unsigned {GeneralLexicon.BATCH_ID_NAME} = {self._get_2d_block_id()};')
       with writer.block(f'if ({self._get_element_size_guard()})'):
         with writer.block(f'if ({self._get_flag_guard(writer)})'):

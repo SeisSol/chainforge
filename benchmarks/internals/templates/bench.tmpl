@@ -39,11 +39,16 @@ int {{ test_name }} () {
       real *next_a = findData({{ "{0}, {0}_size".format(descr.mat_a.alias) }}, {% if is_batch(descr.mat_a.addressing) %}element{% else %}0{% endif %});
       real *next_b = findData({{ "{0}, {0}_size".format(descr.mat_b.alias) }}, {% if is_batch(descr.mat_b.addressing) %}element{% else %}0{% endif %});
       real *next_c = findData({{ "{0}, {0}_size".format(descr.mat_c.alias) }}, {% if is_batch(descr.mat_c.addressing) %}element{% else %}0{% endif %});
-      gemm({{ trans2str(descr.trans_a) }}, {{ trans2str(descr.trans_b) }}, 
+      int offset_a = {{descr.mat_a.get_offset_to_first_element()}};
+      int offset_b = {{descr.mat_b.get_offset_to_first_element()}};
+      int offset_c = {{descr.mat_c.get_offset_to_first_element()}};
+
+
+      gemm({{ trans2str(descr.trans_a) }}, {{ trans2str(descr.trans_b) }},
            {{ descr._m }}, {{ descr._n }}, {{ descr._k }},
-           {{ descr.alpha }}, next_a, {{ descr.mat_a.num_rows }},
-           next_b, {{ descr.mat_b.num_rows }},
-           {{ descr.beta }}, next_c, {{ descr.mat_c.num_rows }});
+           {{ descr.alpha }}, (next_a + offset_a), {{ descr.mat_a.num_rows }},
+           (next_b + offset_b), {{ descr.mat_b.num_rows }},
+           {{ descr.beta }}, (next_c + offset_c), {{ descr.mat_c.num_rows }});
 
            
     }

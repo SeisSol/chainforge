@@ -5,6 +5,7 @@ class HwDecription:
   def __init__(self, param_table, arch, backend):
     self.vec_unit_length = param_table['vec_unit_length']
     self.hw_fp_word_size = param_table['hw_fp_word_size']
+    self.mem_access_align_size = param_table['mem_access_align_size']
     self.max_local_mem_size_per_block = param_table['max_local_mem_size_per_block']
     self.max_threads_per_block = param_table['max_num_threads']
     self.max_reg_per_block = param_table['max_reg_per_block']
@@ -65,6 +66,7 @@ def get_known_arch():
     'max_threads_per_sm': 2048,
     'max_block_per_sm': 32,
     'hw_fp_word_size': 4,
+    'mem_access_align_size': 32,
     'name': 'nvidia',
   }
 
@@ -108,6 +110,7 @@ def get_known_arch():
     'max_threads_per_sm': 40 * amd_wavefront,
     'max_block_per_sm': 40,
     'hw_fp_word_size': 4,
+    'mem_access_align_size': 32,
     'name': 'amd',
   }
 
@@ -126,6 +129,7 @@ def get_known_arch():
     'max_threads_per_sm': 512,
     'max_block_per_sm': 64,
     'hw_fp_word_size': 4,
+    'mem_access_align_size': 32,
     'name': 'intel',
   }
 
