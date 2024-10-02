@@ -82,15 +82,18 @@ def get_known_arch():
   arch['sm_75']['max_block_per_sm'] = 16
 
   arch['sm_80'] = deepcopy(arch['sm_60'])
-  arch['sm_80']['max_local_mem_size_per_block'] = 164 * KB
+  arch['sm_80']['max_local_mem_size_per_block'] = 163 * KB
 
   arch['sm_86'] = deepcopy(arch['sm_60'])
-  arch['sm_86']['max_local_mem_size_per_block'] = 100 * KB
+  arch['sm_86']['max_local_mem_size_per_block'] = 99 * KB
   arch['sm_86']['max_block_per_sm'] = 16
   arch['sm_86']['max_threads_per_sm'] = 1536
 
+  arch['sm_89'] = deepcopy(arch['sm_60'])
+  arch['sm_89']['max_local_mem_size_per_block'] = 99 * KB
+
   arch['sm_90'] = deepcopy(arch['sm_60'])
-  arch['sm_90']['max_local_mem_size_per_block'] = 228 * KB
+  arch['sm_90']['max_local_mem_size_per_block'] = 227 * KB
 
   # AMD
   # MI50
@@ -119,6 +122,28 @@ def get_known_arch():
 
   arch['gfx90a'] = deepcopy(arch['gfx908'])
 
+  arch['gfx942'] = deepcopy(arch['gfx90a'])
+  arch['gfx940'] = deepcopy(arch['gfx942'])
+  arch['gfx941'] = deepcopy(arch['gfx942'])
+
+  arch['gfx1010'] = {
+    'vec_unit_length': 32,
+    'max_local_mem_size_per_block': 128 * KB,
+    'max_num_threads': 1024,
+    'max_reg_per_block': 256 * KB,
+    'max_threads_per_sm': 40 * 32,
+    'max_block_per_sm': 40,
+    'hw_fp_word_size': 4,
+    'mem_access_align_size': 32,
+    'name': 'amd',
+  }
+
+  arch['gfx1030'] = deepcopy(arch['gfx1010'])
+  arch['gfx1100'] = deepcopy(arch['gfx1010'])
+  arch['gfx1101'] = deepcopy(arch['gfx1010'])
+  arch['gfx1102'] = deepcopy(arch['gfx1010'])
+  arch['gfx1150'] = deepcopy(arch['gfx1010'])
+  arch['gfx1200'] = deepcopy(arch['gfx1010'])
 
   # Intel
   arch['dg1'] = {
