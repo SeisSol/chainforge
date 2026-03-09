@@ -95,6 +95,12 @@ def get_known_arch():
   arch['sm_90'] = deepcopy(arch['sm_60'])
   arch['sm_90']['max_local_mem_size_per_block'] = 227 * KB
 
+  arch['sm_100'] = deepcopy(arch['sm_60'])
+  arch['sm_100']['max_local_mem_size_per_block'] = 227 * KB
+
+  arch['sm_120'] = deepcopy(arch['sm_60'])
+  arch['sm_120']['max_local_mem_size_per_block'] = 99 * KB
+
   # AMD
   # MI50
 
