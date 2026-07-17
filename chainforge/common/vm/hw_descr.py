@@ -151,6 +151,10 @@ def get_known_arch():
   arch['gfx1150'] = deepcopy(arch['gfx1010'])
   arch['gfx1200'] = deepcopy(arch['gfx1010'])
 
+  arch['gfx1250'] = deepcopy(arch['gfx1010'])
+  arch['gfx1250']['max_local_mem_size_per_block'] = 384 * KB
+  arch['gfx1251'] = deepcopy(arch['gfx1250'])
+
   # Intel
   arch['dg1'] = {
     'vec_unit_length': 64,
